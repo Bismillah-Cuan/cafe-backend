@@ -14,7 +14,7 @@ class Users(Base):
     hashed_password = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=None, onupdate=datetime.now(timezone.utc), nullable=True)
-    is_deleted = Column(DateTime, default=None, nullable=True)
+    is_deleted = Column(Boolean, default=False, nullable=False)
     
     # # relationship to purchase_order
     # purchase_order = relationship("PurchaseOrder", back_populates="users")

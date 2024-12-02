@@ -6,10 +6,10 @@ from app.constant.messages.error import Error
 
 class RawMaterialServices:
     @staticmethod
-    def get_raw_materials():
+    def get_all_raw_materials():
         with Session() as session:
             try:
-                raw_materials = session.query(RawMaterials).all()
+                raw_materials = session.query(RawMaterials).filter(RawMaterials.is_deleted == False).all()
                 list_raw_materials = [raw_material.to_dict() for raw_material in raw_materials]
                 
                 return jsonify({
@@ -17,7 +17,7 @@ class RawMaterialServices:
                 })
             except Exception as e:
                 session.rollback()
-                return jsonify(Error.error(e))
+                return jsonify(Error.messages(e))
             
     @staticmethod
     def create_raw_material(data):
@@ -40,7 +40,7 @@ class RawMaterialServices:
                 session.commit()
             except Exception as e:
                 session.rollback()
-                return jsonify(Error.error(e)), 400
+                return jsonify(Error.messages(e)), 400
             
             return jsonify({
                 "msg": RawMaterialMessages.SUCCESS_ADD_RAW_MATERIALS_DATA,
@@ -66,7 +66,7 @@ class RawMaterialServices:
                 session.commit()
             except Exception as e:
                 session.rollback()
-                return jsonify(Error.error(e)), 400
+                return jsonify(Error.messages(e)), 400
             
             return jsonify({
                 "msg": RawMaterialMessages.SUCCESS_UPDATE_RAW_MATERIALS_DATA,
@@ -74,18 +74,18 @@ class RawMaterialServices:
             })
             
     @staticmethod
-    def delete_raw_material(id):
+    def delete_raw_material(data):
         with Session() as session:
             try:
-                check_raw_material = session.query(RawMaterials).filter_by(id=id).first()
+                check_raw_material = session.query(RawMaterials).filter_by(id=data["id"]).first()
                 if check_raw_material is None:
                     return jsonify({"msg": RawMaterialMessages.RAW_MATERIALS_NOT_FOUND}), 404
                 
-                session.delete(check_raw_material)
+                check_raw_material.is_deleted = True
                 session.commit()
             except Exception as e:
                 session.rollback()
-                return jsonify(Error.error(e)), 400
+                return jsonify(Error.messages(e)), 400
             
             return jsonify({
                 "msg": RawMaterialMessages.SUCCESS_DELETE_RAW_MATERIALS_DATA

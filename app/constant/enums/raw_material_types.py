@@ -1,6 +1,6 @@
 from enum import Enum
 
-class RawMaterialTypeEnums(Enum):
+class RawMaterialTypeEnums(str, Enum):
     DRY = "dry"
     FRESH = "fresh"
     DAIRY = "dairy"

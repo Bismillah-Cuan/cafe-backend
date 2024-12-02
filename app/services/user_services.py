@@ -69,6 +69,17 @@ class UsersService:
                 session.rollback()
                 return jsonify(Error.messages(e)), 400
             
+    def user_list():
+        with Session() as session:
+            try:
+                users = session.query(Users).filter(Users.is_deleted == False).all()
+                return jsonify({
+                    "users": [user.to_dict() for user in users]
+                }), 200
+            except Exception as e:
+                session.rollback()
+                return jsonify(Error.messages(e)), 400
+            
     @staticmethod
     def change_password(payload, data):
         with Session() as session:
@@ -92,3 +103,22 @@ class UsersService:
                 return jsonify({
                     "msg": Error.messages(e)
                 })
+                
+    @staticmethod
+    def delete_user(data):
+        with Session() as session:
+            try:
+                user_profile = session.query(Users).filter_by(id=data["id"], username=data["username"]).first()
+                if not user_profile:
+                    return jsonify({"msg": UserMessages.USERNAME_NOT_EXIST}), 404
+                
+                user_profile.is_deleted = True
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                return jsonify(Error.messages(e)), 400
+            
+            return jsonify({
+                "msg": UserMessages.SUCCESS_DELETE_USER
+            }), 200
+            
