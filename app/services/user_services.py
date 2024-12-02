@@ -108,7 +108,7 @@ class UsersService:
     def delete_user(data):
         with Session() as session:
             try:
-                user_profile = session.query(Users).filter_by(id=data["id"], username=data["username"]).first()
+                user_profile = session.query(Users).filter_by(id=data["user_id"], username=data["username"]).first()
                 if not user_profile:
                     return jsonify({"msg": UserMessages.USERNAME_NOT_EXIST}), 404
                 
