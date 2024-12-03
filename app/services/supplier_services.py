@@ -28,10 +28,14 @@ class SupplierServices:
                 check_name = session.query(Supplier).filter_by(name=data["name"]).first()
                 if check_name is not None:
                     return jsonify({"msg": SupplierMessages.SUPPLIER_ALREADY_EXIST}), 400
+                
+                address = data["address"].strip() if data.get("address", "").strip() else None
+                phone_number = data["phone_number"].strip() if data.get("phone_number", "").strip() else None
+                
                 new_supplier: Supplier = Supplier(
                     name = data["name"],
-                    address = data["address"],
-                    phone_number = data["phone_number"]
+                    address = address,
+                    phone_number = phone_number
                 )
                 session.add(new_supplier)
                 session.commit()
@@ -51,7 +55,8 @@ class SupplierServices:
                 check_supplier = session.query(Supplier).filter_by(id=data["id"], name=data["name"]).first()
                 if check_supplier is None:
                     return jsonify({"msg": SupplierMessages.SUPPLIER_NOT_FOUND}), 404
-                session.delete(check_supplier)
+                
+                check_supplier.is_deleted = True
                 session.commit()
             except Exception as e:
                 session.rollback()
@@ -69,8 +74,9 @@ class SupplierServices:
                 if check_supplier is None:
                     return jsonify({"msg": SupplierMessages.SUPPLIER_NOT_FOUND}), 404
                 check_supplier.name = data["name"]
-                check_supplier.address = data["address"]
-                check_supplier.phone_number = data["phone_number"]
+                
+                check_supplier.address = data["address"].strip() if data.get("address", "").strip() else None
+                check_supplier.phone_number = data["phone_number"].strip() if data.get("phone_number", "").strip() else None
                 
                 session.add(check_supplier)
                 session.commit()
