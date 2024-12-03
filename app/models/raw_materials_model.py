@@ -20,7 +20,7 @@ class RawMaterials(Base):
     
     # # RELATIONSHIPS
     # # relationship to stock_inventory
-    # stock = relationship("StockInventory", back_populates="raw_materials", uselist=False)
+    stock = relationship("StockInventory", back_populates="raw_materials", uselist=False)
     
     # # relationship to menu_ingredients
     # menu_ingredient = relationship("MenuIngredients", back_populates="raw_materials")
