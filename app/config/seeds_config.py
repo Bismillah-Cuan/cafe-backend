@@ -27,7 +27,7 @@ seed_configs = {
                 quantity_unit=raw_material_data["quantity_unit"]
             )
         },
-        "supplier": {
+        "suppliers": {
             "model": Supplier,
             "data": suppliers_data,
             "fields": ["name", "address", "phone_number"],

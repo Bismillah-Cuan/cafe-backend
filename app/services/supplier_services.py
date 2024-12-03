@@ -6,7 +6,7 @@ from app.constant.messages.error import Error
 
 class SupplierServices:
     @staticmethod
-    def show_all_suppliers():
+    def get_all_suppliers():
         with Session() as session:
             try:
                 suppliers: Supplier = session.query(Supplier).filter(Supplier.is_deleted == False).all()
