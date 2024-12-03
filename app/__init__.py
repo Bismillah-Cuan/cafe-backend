@@ -26,8 +26,9 @@ def create_app(test_config=None, production_config=os.getenv("PRODUCTION_CONFIG"
     def index():
         return redirect("https://documenter.getpostman.com/view/31842216/2sAYBRGa1z")
     
-    from app.routes import users, seeds
+    from app.routes import users, raw_materials, seeds
     app.register_blueprint(users, url_prefix="/api/v1/users")
+    app.register_blueprint(raw_materials, url_prefix="/api/v1/raw-materials")
     app.register_blueprint(seeds, url_prefix="/api/v1/seeds")
     
     return app
