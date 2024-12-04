@@ -13,10 +13,10 @@ class RawMaterialServices:
                 list_raw_materials = [raw_material.to_dict() for raw_material in raw_materials]
                 
                 return jsonify({
+                    "messages": RawMaterialMessages.SUCCESS_SHOW_ALL_RAW_MATERIALS,
                     "raw_materials": list_raw_materials
                 })
             except Exception as e:
-                session.rollback()
                 return jsonify(Error.messages(e))
             
     @staticmethod

@@ -9,7 +9,7 @@ class RawMaterials(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String(255), nullable=False)
-    type = Column(Enum(RawMaterialTypeEnums), nullable=False)   
+    type = Column(Enum(RawMaterialTypeEnums), nullable=False)  
     brand = Column(String(255), nullable=False)
     purchase_unit = Column(String(255), nullable=False)
     quantity = Column(Float, nullable=False)
@@ -20,7 +20,7 @@ class RawMaterials(Base):
     
     # # RELATIONSHIPS
     # # relationship to stock_inventory
-    stock = relationship("StockInventory", back_populates="raw_materials", uselist=False)
+    # stock = relationship("StockInventory", back_populates="raw_materials", uselist=False)
     
     # # relationship to menu_ingredients
     # menu_ingredient = relationship("MenuIngredients", back_populates="raw_materials")
@@ -29,7 +29,7 @@ class RawMaterials(Base):
     # purchase_order = relationship("PurchaseOrder", back_populates="raw_materials")
     
     # # relationship to PR
-    # purchase_request = relationship("PurchaseRequest", back_populates="raw_materials")
+    purchase_request = relationship("PurchaseRequest", back_populates="raw_materials")
     
     # # relationship to market_lists
     # market_list = relationship("MarketList", back_populates="raw_materials", uselist=False)

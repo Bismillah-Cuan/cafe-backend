@@ -66,7 +66,6 @@ class UsersService:
                     "profile": user_profile.to_dict()
                 }), 200
             except Exception as e:
-                session.rollback()
                 return jsonify(Error.messages(e)), 400
             
     def user_list():
@@ -77,7 +76,6 @@ class UsersService:
                     "users": [user.to_dict() for user in users]
                 }), 200
             except Exception as e:
-                session.rollback()
                 return jsonify(Error.messages(e)), 400
             
     @staticmethod
