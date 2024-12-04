@@ -51,7 +51,7 @@ class RawMaterialServices:
     def update_raw_material(data):
         with Session() as session:
             try:
-                check_raw_material = session.query(RawMaterials).filter_by(name=data["name"]).first()
+                check_raw_material = session.query(RawMaterials).filter_by(id=data["id"], name=data["name"]).first()
                 if check_raw_material is None:
                     return jsonify({"msg": RawMaterialMessages.RAW_MATERIALS_NOT_FOUND}), 404
                 
@@ -77,7 +77,7 @@ class RawMaterialServices:
     def delete_raw_material(data):
         with Session() as session:
             try:
-                check_raw_material = session.query(RawMaterials).filter_by(id=data["id"]).first()
+                check_raw_material = session.query(RawMaterials).filter_by(id=data["id"], name=data["name"]).first()
                 if check_raw_material is None:
                     return jsonify({"msg": RawMaterialMessages.RAW_MATERIALS_NOT_FOUND}), 404
                 

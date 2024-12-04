@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from app.services.raw_material_services import RawMaterialServices
 from app.utils.auth.protected_routes import division_required
-from app.constant.messages.error import Error
+from app.constant.messages.auth import AuthMessages
 
 class RawMaterialControllers:
     @staticmethod
@@ -9,7 +9,7 @@ class RawMaterialControllers:
     def raw_materials_controllers(payload):
         division = payload["division"]
         
-        if division == "super_admin":
+        if division == "super_admin" or division == "admin":
             if request.method == "GET":
                 response = RawMaterialServices.get_all_raw_materials()
             elif request.method == "POST":
@@ -24,5 +24,7 @@ class RawMaterialControllers:
         else:
             if request.method == "GET":
                 response = RawMaterialServices.get_all_raw_materials()
+            else:
+                return jsonify(AuthMessages.USER_NOT_AUTHORIZED), 403
         
         return response
