@@ -1,7 +1,8 @@
-from flask import Flask, redirect
+from flask import Flask, redirect, request
 from app.config import DevelopmentConfig, ProductionConfig
 from flask_jwt_extended import JWTManager
 import os
+from flask_cors import CORS
 
 jwt = JWTManager()
 
@@ -17,6 +18,8 @@ def create_app(test_config=None, production_config=os.getenv("PRODUCTION_CONFIG"
         app.config.from_object(DevelopmentConfig)
         
     jwt.init_app(app)
+    
+    CORS(app)
     
     @app.route("/")
     def index():

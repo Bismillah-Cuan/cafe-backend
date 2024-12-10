@@ -1,7 +1,9 @@
 from flask import Blueprint
+from flask_cors import CORS
 from app.controllers.users_controllers import UsersController
 from app.controllers.raw_material_controllers import RawMaterialControllers
 from app.controllers.supplier_controllers import SupplierControllers
+from app.controllers.purchase_request_controllers import PurchaseRequestControllers
 from app.controllers.seed_controllers import seeds_controller
 
 users = Blueprint("users", __name__)
@@ -17,6 +19,9 @@ raw_materials.add_url_rule("/", view_func=RawMaterialControllers.raw_materials_c
 
 suppliers = Blueprint("suppliers", __name__)
 suppliers.add_url_rule("/", view_func=SupplierControllers.supplier_controllers, methods=["GET", "POST", "DELETE", "PUT"])
+
+purchase_request = Blueprint("purchase-request", __name__)
+purchase_request.add_url_rule("/", view_func=PurchaseRequestControllers.purchase_request_controllers, methods=["GET", "POST", "DELETE", "PUT"])
 
 seeds = Blueprint("seeds", __name__)
 seeds.add_url_rule("/", view_func=seeds_controller, methods=["GET", "POST", "DELETE"])
