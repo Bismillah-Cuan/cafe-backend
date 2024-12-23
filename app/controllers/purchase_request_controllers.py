@@ -14,7 +14,7 @@ class PurchaseRequestControllers:
                 response = PurchaseRequestServices.get_all_purchase_request()
             elif request.method == "POST":
                 data = request.json
-                response = PurchaseRequestServices.create_purchase_request(data)
+                response = PurchaseRequestServices.create_purchase_request(data, payload)
             elif request.method == "PUT":
                 data = request.json
                 response = PurchaseRequestServices.update_purchase_request(data)

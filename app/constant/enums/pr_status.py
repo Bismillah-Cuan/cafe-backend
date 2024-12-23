@@ -1,6 +1,6 @@
 from enum import Enum
 
-class PRStatus(Enum):
+class PRStatus(str, Enum):
     REQUESTED = "requested"
     APPROVED = "approved"
     REJECTED = "rejected"

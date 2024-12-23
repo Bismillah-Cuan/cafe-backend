@@ -6,5 +6,5 @@ class PurchaseRequestMessages:
     SUCCESS_SHOW_ALL_PURCHASE_REQUEST = "Success show all purchase request data"
     PURCHASE_REQUEST_NOT_FOUND = "purchase request not found"
     RAW_MATERIAL_QUANTITY_MISMATCH = "raw material quantity mismatch"
-    RAW_MATERIAL_ALREADY_EXISTS = "raw material already exists"
+    RAW_MATERIAL_ALREADY_ADDED = "raw material already added in the same pr"
     

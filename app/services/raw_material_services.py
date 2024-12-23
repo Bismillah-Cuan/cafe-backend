@@ -23,7 +23,11 @@ class RawMaterialServices:
     def create_raw_material(data):
         with Session() as session:
             try:
-                check_raw_material = session.query(RawMaterials).filter_by(name=data["name"]).first()
+                check_raw_material = session.query(RawMaterials).filter(
+                    RawMaterials.name == data["name"], 
+                    RawMaterials.is_deleted == False
+                ).first()
+
                 if check_raw_material is not None:
                     return jsonify({"msg": RawMaterialMessages.RAW_MATERIALS_ALREADY_EXIST}), 400
                 

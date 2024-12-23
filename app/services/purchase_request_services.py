@@ -3,8 +3,10 @@ from collections import defaultdict
 from app.connections.db import Session
 from app.models.purchase_request_model import PurchaseRequest
 from app.models.raw_materials_model import RawMaterials
+from app.models.users_model import Users
 from app.constant.messages.purchase_request import PurchaseRequestMessages
 from app.constant.messages.raw_materials import RawMaterialMessages
+from app.constant.messages.user import UserMessages
 from app.constant.messages.error import Error
 
 class PurchaseRequestServices:
@@ -15,49 +17,47 @@ class PurchaseRequestServices:
                 # Ambil semua purchase request yang tidak dihapus
                 purchase_requests = session.query(PurchaseRequest).filter(PurchaseRequest.is_deleted == False).all()
                 
-                # Kelompokkan berdasarkan pr_code
-                grouped_purchase_requests = defaultdict(list)
-                
+                # Dictionary untuk mengelompokkan PR berdasarkan pr_code
+                grouped_purchase_requests = defaultdict(lambda: {"pr_code": "", "division": "", "user_id": "", "status": "", "metadata": {}, "requested_raw_materials": []})
+
+                # Iterasi semua purchase_request
                 for purchase_request in purchase_requests:
-                    # Ambil field yang diperlukan dari to_dict(), hanya ambil beberapa field
+                    # Ambil data PR dalam bentuk dictionary
                     pr_data = purchase_request.to_dict()
 
-                    # Buat dictionary yang hanya mengandung field yang diperlukan
-                    pr_data_filtered = {
-                        "pr_code": pr_data["pr_code"],
-                        "division": pr_data["division"],
-                        "user_id": pr_data["user_id"],
-                        "status": pr_data["status"],
-                        "metadata": pr_data.get("metadata", {})
-                    }
-
-                    # Ambil raw material yang terkait dengan purchase_request (berdasarkan relasi)
-                    raw_materials = purchase_request.raw_materials  # Mengambil semua raw materials terkait dengan pr_code
-                    
-                    # Jika ada raw_materials, ambil data yang diperlukan dan kecualikan quantity
-                    requested_raw_materials = []
-                    for raw_material in raw_materials:
-                        raw_material_data = raw_material.to_dict()  # Dapatkan dict dari raw_material
-                        # Exclude quantity dari raw_material_data
-                        raw_material_data.pop("quantity", None)  # Menghapus quantity agar tidak disertakan
-                        requested_raw_materials.append({
-                            "raw_material_id": raw_material.id,
-                            "quantity": purchase_request.quantity,  # Gunakan quantity dari PurchaseRequest
-                            "details": raw_material_data  # Details tetap berisi data selain quantity
+                    # Jika belum ada dalam dictionary, inisialisasi key baru
+                    if pr_data["pr_code"] not in grouped_purchase_requests:
+                        grouped_purchase_requests[pr_data["pr_code"]].update({
+                            "pr_code": pr_data["pr_code"],
+                            "division": pr_data["division"],
+                            "user_id": pr_data["user_id"],
+                            "status": pr_data["status"],
+                            "metadata": pr_data.get("metadata", {}),
+                            "requested_raw_materials": []  # Kosongkan requested_raw_materials awalnya
                         })
-                    
-                    pr_data_filtered["requested_raw_materials"] = requested_raw_materials
-                    
-                    # Kelompokkan berdasarkan pr_code
-                    grouped_purchase_requests[purchase_request.pr_code].append(pr_data_filtered)
 
-                # Konversi defaultdict ke dictionary biasa untuk respons
-                response_data = {pr_code: requests for pr_code, requests in grouped_purchase_requests.items()}
-                
+                    # Jika raw_material ada, tambahkan ke requested_raw_materials
+                    if purchase_request.raw_materials:
+                        raw_material_data = purchase_request.raw_materials.to_dict()  # Ambil dict raw_material
+                        raw_material_data.pop("quantity", None)  # Hapus quantity jika ada
+                        raw_material_data.pop("metadata", None)  # Hapus metadata jika ada
+
+                        # Tambahkan raw_material ke list
+                        grouped_purchase_requests[pr_data["pr_code"]]["requested_raw_materials"].append({
+                            "raw_material_id": purchase_request.raw_materials.id,
+                            "quantity": purchase_request.quantity,  # Ambil quantity dari PurchaseRequest
+                            "details": raw_material_data  # Details berisi raw_material fields kecuali quantity
+                        })
+
+                # Konversi defaultdict ke list biasa
+                response_data = list(grouped_purchase_requests.values())
+
+                # Berikan respons JSON
                 return jsonify({
                     "message": PurchaseRequestMessages.SUCCESS_SHOW_PURCHASE_REQUEST,
                     "pr_list": response_data
                 }), 200
+            
             except Exception as e:
                 return jsonify({"error": str(e)}), 400
 
@@ -101,7 +101,7 @@ class PurchaseRequestServices:
 
             
     @staticmethod
-    def create_purchase_request(data):
+    def create_purchase_request(data, payload):
         with Session() as session:
             try:
                 # Pisahkan raw_material_id dan quantity menjadi daftar
@@ -119,21 +119,35 @@ class PurchaseRequestServices:
                     existing_purchase_request = session.query(PurchaseRequest).filter_by(
                         pr_code=data["pr_code"], raw_material_id=raw_material_id
                     ).first()
-                    if existing_purchase_request:
-                        return jsonify(
-                            {"msg": PurchaseRequestMessages.RAW_MATERIAL_ALREADY_EXISTS}
-                        ), 400
 
-                    # Cek jika raw_material_id valid
-                    check_raw_material = session.query(RawMaterials).filter_by(id=raw_material_id).first()
-                    if check_raw_material is None:
+                    if existing_purchase_request:
+                        # Ambil nama material atau detail lainnya untuk dimasukkan dalam respons
+                        raw_material = session.query(RawMaterials).filter_by(id=raw_material_id).first()
+                        if raw_material:
+                            raw_material_name = raw_material.name
+                        else:
+                            return jsonify({"msg": RawMaterialMessages.RAW_MATERIALS_NOT_FOUND}), 404
+                        
+                        return jsonify(
+                            {
+                                "msg": PurchaseRequestMessages.RAW_MATERIAL_ALREADY_ADDED,
+                                "material": {
+                                    "id": raw_material_id,
+                                    "name": raw_material_name,
+                                },
+                            }
+                        ), 400
+                        
+                    # Jika tidak ditemukan, cek validitas raw_material_id
+                    raw_material = session.query(RawMaterials).filter_by(id=raw_material_id).first()
+                    if raw_material is None:
                         return jsonify({"msg": RawMaterialMessages.RAW_MATERIALS_NOT_FOUND}), 404
 
                     # Buat instance PurchaseRequest
                     purchase_request = PurchaseRequest(
                         pr_code=data["pr_code"],
-                        user_id=data["user_id"],
-                        division=data["division"],
+                        user_id=payload["user_id"],
+                        division=payload["division"],
                         raw_material_id=raw_material_id,
                         quantity=quantity
                     )
