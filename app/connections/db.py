@@ -11,8 +11,8 @@ db_host = os.getenv("DB_HOST")
 db_port = os.getenv("DB_PORT")
 db_name = os.getenv("DB_NAME")
 
-print("connecting to db...")
-engine = create_engine(f"postgresql+psycopg2://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}")
+DB_URI = f"postgresql+psycopg2://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+engine = create_engine(DB_URI)
 
 connection = engine.connect()
 print("connected to db")
