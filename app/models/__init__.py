@@ -9,4 +9,4 @@ from app.models.purchase_request_model import PurchaseRequest
 # Membuat semua tabel yang belum ada berdasarkan model
 Base.metadata.create_all(engine)
 
-print("All tables created")
+print("Success update database")

@@ -7,12 +7,12 @@ Base = declarative_base()
 
 db_username = os.getenv("DB_USERNAME")
 db_password = os.getenv("DB_PASSWORD")
-db_server = os.getenv("DB_SERVER")
+db_host = os.getenv("DB_HOST")
 db_port = os.getenv("DB_PORT")
 db_name = os.getenv("DB_NAME")
 
 print("connecting to db...")
-engine = create_engine(f"postgresql+psycopg2://{db_username}:{db_password}@{db_server}:{db_port}/{db_name}")
+engine = create_engine(f"postgresql+psycopg2://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}")
 
 connection = engine.connect()
 print("connected to db")

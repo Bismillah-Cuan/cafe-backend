@@ -1,10 +1,13 @@
-from flask import Flask, redirect, request
+from flask import Flask, redirect
 from app.config import DevelopmentConfig, ProductionConfig
 from flask_jwt_extended import JWTManager
+from dotenv import load_dotenv
 import os
 from flask_cors import CORS
 
 jwt = JWTManager()
+
+load_dotenv()
 
 def create_app(test_config=None, production_config=os.getenv("PRODUCTION_CONFIG")):
     app = Flask(__name__)
