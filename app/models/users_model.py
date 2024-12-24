@@ -20,7 +20,7 @@ class Users(Base):
     # purchase_order = relationship("PurchaseOrder", back_populates="users")
     
     # # relationship to purchase_request
-    # purchase_request = relationship("PurchaseRequest", back_populates="users")
+    purchase_request = relationship("PurchaseRequest", back_populates="users")
     
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)

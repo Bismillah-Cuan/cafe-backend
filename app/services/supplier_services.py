@@ -18,7 +18,6 @@ class SupplierServices:
                     "suppliers": list_suppliers
                 })
             except Exception as e:
-                session.rollback()
                 return jsonify(Error.messages(e))
     
     @staticmethod

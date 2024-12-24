@@ -13,17 +13,21 @@ class RawMaterialServices:
                 list_raw_materials = [raw_material.to_dict() for raw_material in raw_materials]
                 
                 return jsonify({
+                    "messages": RawMaterialMessages.SUCCESS_SHOW_ALL_RAW_MATERIALS,
                     "raw_materials": list_raw_materials
                 })
             except Exception as e:
-                session.rollback()
                 return jsonify(Error.messages(e))
             
     @staticmethod
     def create_raw_material(data):
         with Session() as session:
             try:
-                check_raw_material = session.query(RawMaterials).filter_by(name=data["name"]).first()
+                check_raw_material = session.query(RawMaterials).filter(
+                    RawMaterials.name == data["name"], 
+                    RawMaterials.is_deleted == False
+                ).first()
+
                 if check_raw_material is not None:
                     return jsonify({"msg": RawMaterialMessages.RAW_MATERIALS_ALREADY_EXIST}), 400
                 
