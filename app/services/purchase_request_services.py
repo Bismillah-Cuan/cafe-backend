@@ -62,41 +62,41 @@ class PurchaseRequestServices:
                 return jsonify({"error": str(e)}), 400
 
             
-    @staticmethod
-    def get_purchase_request(data):
-        with Session() as session:
-            try:
-                # Ambil semua purchase request dengan pr_code yang diberikan
-                purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
+    # @staticmethod
+    # def get_purchase_request(data):
+    #     with Session() as session:
+    #         try:
+    #             # Ambil semua purchase request dengan pr_code yang diberikan
+    #             purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
                 
-                # Validasi apakah data ditemukan
-                if not purchase_requests:  # Cek apakah daftar kosong
-                    return jsonify({"msg": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
+    #             # Validasi apakah data ditemukan
+    #             if not purchase_requests:  # Cek apakah daftar kosong
+    #                 return jsonify({"msg": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
                 
-                # Konversi setiap objek ke dictionary dan exclude quantity dari raw materials
-                list_purchase_requests = []
-                for pr in purchase_requests:
-                    pr_data = pr.to_dict()
-                    # Ambil raw_materials yang sesuai, tanpa quantity
-                    requested_raw_materials = []
-                    for raw_material in pr.raw_materials:
-                        rm_data = raw_material.to_dict()
-                        rm_data.pop('quantity', None)  # Hapus quantity dari raw_material
-                        requested_raw_materials.append({
-                            "raw_material_id": rm_data.id,
-                            "quantity": pr.quantity,  # Gunakan quantity dari PurchaseRequest
-                            "details": rm_data  # Details tetap berisi data selain quantity
-                        })
+    #             # Konversi setiap objek ke dictionary dan exclude quantity dari raw materials
+    #             list_purchase_requests = []
+    #             for pr in purchase_requests:
+    #                 pr_data = pr.to_dict()
+    #                 # Ambil raw_materials yang sesuai, tanpa quantity
+    #                 requested_raw_materials = []
+    #                 for raw_material in pr.raw_materials:
+    #                     rm_data = raw_material.to_dict()
+    #                     rm_data.pop('quantity', None)  # Hapus quantity dari raw_material
+    #                     requested_raw_materials.append({
+    #                         "raw_material_id": rm_data.id,
+    #                         "quantity": pr.quantity,  # Gunakan quantity dari PurchaseRequest
+    #                         "details": rm_data  # Details tetap berisi data selain quantity
+    #                     })
                     
-                    pr_data["requested_raw_materials"] = requested_raw_materials
-                    list_purchase_requests.append(pr_data)
+    #                 pr_data["requested_raw_materials"] = requested_raw_materials
+    #                 list_purchase_requests.append(pr_data)
                 
-                return jsonify({
-                    "message": PurchaseRequestMessages.SUCCESS_SHOW_PURCHASE_REQUEST,
-                    "purchase_requests": list_purchase_requests
-                }), 200
-            except Exception as e:
-                return jsonify(Error.messages(e)), 400
+    #             return jsonify({
+    #                 "message": PurchaseRequestMessages.SUCCESS_SHOW_PURCHASE_REQUEST,
+    #                 "purchase_requests": list_purchase_requests
+    #             }), 200
+    #         except Exception as e:
+    #             return jsonify(Error.messages(e)), 400
 
 
             
@@ -137,7 +137,7 @@ class PurchaseRequestServices:
                                 },
                             }
                         ), 400
-                        
+                    
                     # Jika tidak ditemukan, cek validitas raw_material_id
                     raw_material = session.query(RawMaterials).filter_by(id=raw_material_id).first()
                     if raw_material is None:
@@ -157,17 +157,37 @@ class PurchaseRequestServices:
                 # Commit setelah semua entri ditambahkan
                 session.commit()
 
-                # Convert semua purchase request ke dict untuk respon
-                purchase_requests_dict = [pr.to_dict() for pr in purchase_requests]
+                # Ambil informasi dari purchase_request terakhir
+                last_purchase_request = purchase_requests[-1].to_dict()  # Ambil purchase_request terakhir
+                grouped_purchase_request = {
+                    "pr_code": last_purchase_request["pr_code"],
+                    "division": last_purchase_request["division"],
+                    "user_id": last_purchase_request["user_id"],
+                    "status": last_purchase_request["status"],  # Ambil status dari purchase_request
+                    "metadata": last_purchase_request.get("metadata", {}),  # Ambil metadata dari purchase_request
+                    "requested_raw_materials": []
+                }
+
+                # Iterasi untuk menyusun requested_raw_materials
+                for purchase_request in purchase_requests:
+                    raw_material_data = purchase_request.raw_materials.to_dict()  # Asumsi raw_materials memiliki metode to_dict()
+                    raw_material_data.pop("quantity", None)  # Hapus quantity dari raw_material
+                    raw_material_data.pop("metadata", None)  # Hapus metadata dari raw_material
+
+                    grouped_purchase_request["requested_raw_materials"].append({
+                        "raw_material_id": purchase_request.raw_materials.id,
+                        "quantity": purchase_request.quantity,
+                        "details": raw_material_data
+                    })
 
             except Exception as e:
                 session.rollback()
-                return jsonify(Error.messages(e)), 400
+                return jsonify({"error": str(e)}), 400
 
-            # Respon sukses
+            # Respon sukses dengan format rapi
             return jsonify({
                 "message": PurchaseRequestMessages.SUCCESS_CREATE_PURCHASE_REQUEST,
-                "purchase_requests": purchase_requests_dict
+                "purchase_request": grouped_purchase_request
             }), 200
 
             
