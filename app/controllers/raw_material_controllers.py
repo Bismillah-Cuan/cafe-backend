@@ -28,3 +28,13 @@ class RawMaterialControllers:
                 return jsonify(AuthMessages.USER_NOT_AUTHORIZED), 403
         
         return response
+    
+    @staticmethod
+    @division_required("super_admin", "admin", "kitchen", "bar", "sosmed", "finance")
+    def search_raw_material(payload):
+        _ = payload
+        data = request.json
+        
+        response = RawMaterialServices.get_raw_materials_by_word(data["word"])
+        
+        return response
