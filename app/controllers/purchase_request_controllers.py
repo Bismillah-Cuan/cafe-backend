@@ -17,7 +17,7 @@ class PurchaseRequestControllers:
                 response = PurchaseRequestServices.create_purchase_request(data, payload)
             elif request.method == "PUT":
                 data = request.json
-                response = PurchaseRequestServices.update_purchase_request(data)
+                response = PurchaseRequestServices.update_purchase_request(data, payload)
             elif request.method == "DELETE":
                 data = request.json
                 response = PurchaseRequestServices.delete_purchase_request(data)
