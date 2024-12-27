@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the port the application will run on
-EXPOSE 8000
+EXPOSE 5000
 
 # Run the command to start the application when the container launches
 CMD ["flask", "run", "--host=0.0.0.0"]
