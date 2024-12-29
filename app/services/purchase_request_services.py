@@ -1,3 +1,4 @@
+import datetime
 from flask import jsonify
 from collections import defaultdict
 from app.connections.db import Session
@@ -295,3 +296,70 @@ class PurchaseRequestServices:
                 "message": PurchaseRequestMessages.SUCCESS_UPDATE_PURCHASE_REQUEST,
                 "purchase_request": grouped_purchase_request
             }), 200
+            
+    @staticmethod
+    def change_status(data):
+        with Session() as session:
+            try:
+                # Cari semua entri dengan pr_code
+                purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
+                
+                # Validasi apakah data ada
+                if not purchase_requests:  # Cek apakah daftar kosong
+                    return jsonify({"msg": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
+                
+                # Tandai semua entri dengan is_deleted = True
+                for pr in purchase_requests:
+                    pr.status = data["status"]
+                
+                # Simpan perubahan
+                session.commit()
+
+            except Exception as e:
+                session.rollback()
+                return jsonify(Error.messages(e)), 400
+
+            return jsonify({
+                "message": PurchaseRequestMessages.SUCCESS_CHANGE_PURCHASE_REQUEST_STATUS
+                })
+            
+    @staticmethod
+    def generate_pr_code(payload):
+        with Session() as session:
+            try:
+                division = payload["division"]
+                if division == "super_admin":
+                    div_prefix = "SA"
+                elif division == "admin":
+                    div_prefix = "AD"
+                elif division == "kitchen":
+                    div_prefix = "KT"
+                elif division == "bar":
+                    div_prefix = "BR"
+                elif division == "sosmed":
+                    div_prefix = "SM"
+                elif division == "finance":
+                    div_prefix = "FN"
+                else:
+                    return jsonify({"msg": "Invalid division"}), 400
+                
+                # Ambil kode terakhir yang ada
+                last_pr = session.query(PurchaseRequest).order_by(PurchaseRequest.pr_code.desc()).first()
+                last_pr_code = last_pr.pr_code if last_pr else None
+                if last_pr_code:
+                    last_pr_code = last_pr_code.split("-")[2]
+                    last_pr_code = int(last_pr_code) + 1
+                else:    
+                    last_pr_code = 1
+
+                # Buat pr_code baru
+                new_pr_code = f"PR{div_prefix}-{datetime.now().strftime('%m%d')}-{last_pr_code:04d}"
+
+            except Exception as e:
+                session.rollback()
+                return jsonify(Error.messages(e)), 400
+
+            return new_pr_code
+        
+    
+    

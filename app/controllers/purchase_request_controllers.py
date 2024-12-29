@@ -31,5 +31,23 @@ class PurchaseRequestControllers:
                 return jsonify(AuthMessages.USER_NOT_AUTHORIZED), 403
             
         return response
+    
+    @staticmethod
+    @division_required("super_admin", "admin")
+    def change_status(payload):
+        _ = payload
+        data = request.json
+        
+        response = PurchaseRequestServices.change_status(data)
+        
+        return response
+    
+    @staticmethod
+    @division_required("super_admin", "admin", "kitchen", "bar", "sosmed", "finance")
+    def generate_pr_code(payload):
+        
+        response = PurchaseRequestServices.generate_pr_code(payload)
+        
+        return response
             
             
