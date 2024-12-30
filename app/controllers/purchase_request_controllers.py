@@ -26,7 +26,7 @@ class PurchaseRequestControllers:
                 response = PurchaseRequestServices.get_all_purchase_request()
             elif request.method == "POST":
                 data = request.json
-                response = PurchaseRequestServices.create_purchase_request(data)
+                response = PurchaseRequestServices.create_purchase_request(data, payload)
             else:
                 return jsonify(AuthMessages.USER_NOT_AUTHORIZED), 403
             
