@@ -24,7 +24,7 @@ suppliers.add_url_rule("/", view_func=SupplierControllers.supplier_controllers, 
 purchase_request = Blueprint("purchase-request", __name__)
 purchase_request.add_url_rule("/", view_func=PurchaseRequestControllers.purchase_request_controllers, methods=["GET", "POST", "DELETE", "PUT"])
 purchase_request.add_url_rule("/change-status", view_func=PurchaseRequestControllers.change_status, methods=["PUT"])
-purchase_request.add_url_rule("/generate-pr-code", view_func=PurchaseRequestControllers.generate_pr_code, methods=["POST"])
+purchase_request.add_url_rule("/generate-pr-code", view_func=PurchaseRequestControllers.generate_pr_code, methods=["GET"])
 
 seeds = Blueprint("seeds", __name__)
 seeds.add_url_rule("/", view_func=seeds_controller, methods=["GET", "POST", "DELETE"])
