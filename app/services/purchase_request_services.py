@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from flask import jsonify
 from collections import defaultdict
 from app.connections.db import Session
