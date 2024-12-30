@@ -117,9 +117,15 @@ class PurchaseRequestServices:
                 purchase_requests = []
                 for raw_material_id, quantity in zip(raw_material_ids, quantities):
                     # Cek jika ada purchase request dengan kombinasi pr_code dan raw_material_id yang sama
-                    existing_purchase_request = session.query(PurchaseRequest).filter_by(
-                        pr_code=data["pr_code"], raw_material_id=raw_material_id
-                    ).first()
+                    existing_purchase_request = (
+                        session.query(PurchaseRequest)
+                        .filter(
+                            PurchaseRequest.pr_code == data["pr_code"],
+                            PurchaseRequest.raw_material_id == raw_material_id,
+                            PurchaseRequest.is_deleted == False
+                        )
+                        .first()
+                    )
 
                     if existing_purchase_request:
                         # Ambil nama material atau detail lainnya untuk dimasukkan dalam respons
@@ -206,6 +212,7 @@ class PurchaseRequestServices:
                 # Tandai semua entri dengan is_deleted = True
                 for pr in purchase_requests:
                     pr.is_deleted = True
+                    pr.pr_code = f"deleted_{pr.pr_code}"
                 
                 # Simpan perubahan
                 session.commit()
