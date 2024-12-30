@@ -372,7 +372,9 @@ class PurchaseRequestServices:
                 session.rollback()
                 return jsonify(Error.messages(e)), 400
 
-            return new_pr_code
+            return jsonify({
+                "new_pr_code": new_pr_code
+                })
         
     
     
