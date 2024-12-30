@@ -344,7 +344,13 @@ class PurchaseRequestServices:
                     return jsonify({"msg": "Invalid division"}), 400
                 
                 # Ambil kode terakhir yang ada
-                last_pr = session.query(PurchaseRequest).order_by(PurchaseRequest.pr_code.desc()).first()
+                last_pr = (
+                    session.query(PurchaseRequest)
+                    .filter(PurchaseRequest.is_deleted == False)  # Menambahkan filter
+                    .order_by(PurchaseRequest.id.desc())         # Mengurutkan berdasarkan id secara menurun
+                    .first()                                     # Mengambil record pertama
+                )
+
                 last_pr_code = last_pr.pr_code if last_pr else None
                 if last_pr_code:
                     last_pr_code = last_pr_code.split("-")[2]
