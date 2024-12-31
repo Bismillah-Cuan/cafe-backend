@@ -16,7 +16,7 @@ users.add_url_rule("/create-admin", view_func=UsersController.create_user, metho
 
 raw_materials = Blueprint("raw-materials", __name__)
 raw_materials.add_url_rule("/", view_func=RawMaterialControllers.raw_materials_controllers, methods=["GET", "POST", "DELETE", "PUT"])
-raw_materials.add_url_rule("/search", view_func=RawMaterialControllers.search_raw_material, methods=["GET"])
+raw_materials.add_url_rule("/search", view_func=RawMaterialControllers.search_raw_material, methods=["POST"])
 
 suppliers = Blueprint("suppliers", __name__)
 suppliers.add_url_rule("/", view_func=SupplierControllers.supplier_controllers, methods=["GET", "POST", "DELETE", "PUT"])
