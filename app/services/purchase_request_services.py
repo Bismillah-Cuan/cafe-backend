@@ -9,6 +9,7 @@ from app.constant.messages.purchase_request import PurchaseRequestMessages
 from app.constant.messages.raw_materials import RawMaterialMessages
 from app.constant.messages.user import UserMessages
 from app.constant.messages.error import Error
+from app.constant.enums.pr_status import PRStatus
 
 class PurchaseRequestServices:
     @staticmethod
@@ -99,7 +100,49 @@ class PurchaseRequestServices:
     #         except Exception as e:
     #             return jsonify(Error.messages(e)), 400
 
+    @staticmethod
+    def generate_pr_code(payload):
+        with Session() as session:
+            try:
+                division = payload["division"]
+                if division == "super_admin":
+                    div_prefix = "SA"
+                elif division == "admin":
+                    div_prefix = "AD"
+                elif division == "kitchen":
+                    div_prefix = "KT"
+                elif division == "bar":
+                    div_prefix = "BR"
+                elif division == "sosmed":
+                    div_prefix = "SM"
+                elif division == "finance":
+                    div_prefix = "FN"
+                else:
+                    return jsonify({"msg": "Invalid division"}), 400
+                
+                # Ambil kode terakhir yang ada
+                last_pr = (
+                    session.query(PurchaseRequest)
+                    .filter(PurchaseRequest.is_deleted == False)  # Menambahkan filter
+                    .order_by(PurchaseRequest.id.desc())         # Mengurutkan berdasarkan id secara menurun
+                    .first()                                     # Mengambil record pertama
+                )
 
+                last_pr_code = last_pr.pr_code if last_pr else None
+                if last_pr_code:
+                    last_pr_code = last_pr_code.split("-")[2]
+                    last_pr_code = int(last_pr_code) + 1
+                else:    
+                    last_pr_code = 1
+
+                # Buat pr_code baru
+                new_pr_code = f"PR{div_prefix}-{datetime.now().strftime('%m%d')}-{last_pr_code:04d}"
+
+            except Exception as e:
+                session.rollback()
+                return jsonify(Error.messages(e)), 400
+
+            return new_pr_code
             
     @staticmethod
     def create_purchase_request(data, payload):
@@ -108,6 +151,10 @@ class PurchaseRequestServices:
                 # Pisahkan raw_material_id dan quantity menjadi daftar
                 raw_material_ids = list(map(str.strip, str(data["raw_material_id"]).split(',')))
                 quantities = list(map(str.strip, str(data["quantity"]).split(',')))
+                
+                pr_code = PurchaseRequestServices.generate_pr_code(payload)
+                if pr_code is None:
+                    return jsonify({"msg": PurchaseRequestMessages.PROBLEM_GENERATING_PR_CODE}), 400
 
                 # Pastikan jumlah raw_material_ids sama dengan quantities
                 if len(raw_material_ids) != len(quantities):
@@ -120,7 +167,7 @@ class PurchaseRequestServices:
                     existing_purchase_request = (
                         session.query(PurchaseRequest)
                         .filter(
-                            PurchaseRequest.pr_code == data["pr_code"],
+                            PurchaseRequest.pr_code == pr_code,
                             PurchaseRequest.raw_material_id == raw_material_id,
                             PurchaseRequest.is_deleted == False
                         )
@@ -152,7 +199,7 @@ class PurchaseRequestServices:
 
                     # Buat instance PurchaseRequest
                     purchase_request = PurchaseRequest(
-                        pr_code=data["pr_code"],
+                        pr_code=pr_code,
                         user_id=payload["user_id"],
                         division=payload["division"],
                         raw_material_id=raw_material_id,
@@ -308,6 +355,10 @@ class PurchaseRequestServices:
     def change_status(data):
         with Session() as session:
             try:
+                
+                if data["status"] not in PRStatus.get_all_pr_status():
+                    return jsonify({"msg": PurchaseRequestMessages.INVALID_PURCHASE_REQUEST_STATUS}), 400  # Cek apakah status valid
+                
                 # Cari semua entri dengan pr_code
                 purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
                 
@@ -315,12 +366,12 @@ class PurchaseRequestServices:
                 if not purchase_requests:  # Cek apakah daftar kosong
                     return jsonify({"msg": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
                 
-                # Tandai semua entri dengan is_deleted = True
+                # Ubah status
                 for pr in purchase_requests:
-                    pr.status = data["status"]
-                
-                # Simpan perubahan
-                session.commit()
+                    pr.pr_status = data["status"]
+                    
+                    # Simpan perubahan
+                    session.commit()
 
             except Exception as e:
                 session.rollback()
@@ -328,53 +379,7 @@ class PurchaseRequestServices:
 
             return jsonify({
                 "message": PurchaseRequestMessages.SUCCESS_CHANGE_PURCHASE_REQUEST_STATUS
-                })
-            
-    @staticmethod
-    def generate_pr_code(payload):
-        with Session() as session:
-            try:
-                division = payload["division"]
-                if division == "super_admin":
-                    div_prefix = "SA"
-                elif division == "admin":
-                    div_prefix = "AD"
-                elif division == "kitchen":
-                    div_prefix = "KT"
-                elif division == "bar":
-                    div_prefix = "BR"
-                elif division == "sosmed":
-                    div_prefix = "SM"
-                elif division == "finance":
-                    div_prefix = "FN"
-                else:
-                    return jsonify({"msg": "Invalid division"}), 400
-                
-                # Ambil kode terakhir yang ada
-                last_pr = (
-                    session.query(PurchaseRequest)
-                    .filter(PurchaseRequest.is_deleted == False)  # Menambahkan filter
-                    .order_by(PurchaseRequest.id.desc())         # Mengurutkan berdasarkan id secara menurun
-                    .first()                                     # Mengambil record pertama
-                )
-
-                last_pr_code = last_pr.pr_code if last_pr else None
-                if last_pr_code:
-                    last_pr_code = last_pr_code.split("-")[2]
-                    last_pr_code = int(last_pr_code) + 1
-                else:    
-                    last_pr_code = 1
-
-                # Buat pr_code baru
-                new_pr_code = f"PR{div_prefix}-{datetime.now().strftime('%m%d')}-{last_pr_code:04d}"
-
-            except Exception as e:
-                session.rollback()
-                return jsonify(Error.messages(e)), 400
-
-            return jsonify({
-                "new_pr_code": new_pr_code
-                })
+                }), 200
         
     
     

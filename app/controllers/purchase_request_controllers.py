@@ -41,13 +41,5 @@ class PurchaseRequestControllers:
         response = PurchaseRequestServices.change_status(data)
         
         return response
-    
-    @staticmethod
-    @division_required("super_admin", "admin", "kitchen", "bar", "sosmed", "finance")
-    def generate_pr_code(payload):
-        
-        response = PurchaseRequestServices.generate_pr_code(payload)
-        
-        return response
             
             
