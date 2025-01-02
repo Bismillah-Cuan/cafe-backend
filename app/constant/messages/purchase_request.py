@@ -10,4 +10,6 @@ class PurchaseRequestMessages:
     SUCCESS_CHANGE_PURCHASE_REQUEST_STATUS = "Success change purchase request status"
     PROBLEM_GENERATING_PR_CODE = "Problem generating pr code"
     INVALID_PURCHASE_REQUEST_STATUS = "Invalid purchase request status"
+    INVALID_DATA_FORMAT = "Invalid data format. 'requested_raw_materials' must be a list"
+    MISSING_DATA = "Missing data. Each raw material must have 'raw_material_id' and 'quantity'"
     
