@@ -20,7 +20,7 @@ class PurchaseRequestServices:
                 purchase_requests = session.query(PurchaseRequest).filter(PurchaseRequest.is_deleted == False).all()
                 
                 # Dictionary untuk mengelompokkan PR berdasarkan pr_code
-                grouped_purchase_requests = defaultdict(lambda: {"pr_code": "", "division": "", "user_id": "", "status": "", "metadata": {}, "requested_raw_materials": []})
+                grouped_purchase_requests = defaultdict(lambda: {"pr_code": "", "division": "", "user_id": "", "status": "", "notes": "", "metadata": {}, "requested_raw_materials": []})
 
                 # Iterasi semua purchase_request
                 for purchase_request in purchase_requests:
@@ -34,6 +34,7 @@ class PurchaseRequestServices:
                             "division": pr_data["division"],
                             "user_id": pr_data["user_id"],
                             "status": pr_data["status"],
+                            "notes": pr_data["notes"],
                             "metadata": pr_data.get("metadata", {}),
                             "requested_raw_materials": []  # Kosongkan requested_raw_materials awalnya
                         })
@@ -53,16 +54,16 @@ class PurchaseRequestServices:
 
                 # Konversi defaultdict ke list biasa
                 response_data = list(grouped_purchase_requests.values())
-
-                # Berikan respons JSON
-                return jsonify({
-                    "message": PurchaseRequestMessages.SUCCESS_SHOW_PURCHASE_REQUEST,
-                    "pr_list": response_data
-                }), 200
             
             except Exception as e:
+                session.rollback()
                 return jsonify({"error": str(e)}), 400
-
+            
+                            # Berikan respons JSON
+            return jsonify({
+                "message": PurchaseRequestMessages.SUCCESS_SHOW_PURCHASE_REQUEST,
+                "pr_list": response_data
+            }), 200
             
     # @staticmethod
     # def get_purchase_request(data):
@@ -148,21 +149,25 @@ class PurchaseRequestServices:
     def create_purchase_request(data, payload):
         with Session() as session:
             try:
-                # Pisahkan raw_material_id dan quantity menjadi daftar
-                raw_material_ids = list(map(str.strip, str(data["raw_material_id"]).split(',')))
-                quantities = list(map(str.strip, str(data["quantity"]).split(',')))
-                
                 pr_code = PurchaseRequestServices.generate_pr_code(payload)
                 if pr_code is None:
                     return jsonify({"msg": PurchaseRequestMessages.PROBLEM_GENERATING_PR_CODE}), 400
 
-                # Pastikan jumlah raw_material_ids sama dengan quantities
-                if len(raw_material_ids) != len(quantities):
-                    return jsonify({"msg": PurchaseRequestMessages.RAW_MATERIAL_QUANTITY_MISMATCH}), 400
+                # Validasi apakah requested_raw_materials tersedia
+                if "requested_raw_materials" not in data or not isinstance(data["requested_raw_materials"], list):
+                    return jsonify({"msg": PurchaseRequestMessages.INVALID_DATA_FORMAT}), 400
 
-                # Iterasi setiap pasangan raw_material_id dan quantity
+                # Iterasi setiap requested_raw_material
                 purchase_requests = []
-                for raw_material_id, quantity in zip(raw_material_ids, quantities):
+                for item in data["requested_raw_materials"]:
+                    raw_material_id = item.get("raw_material_id")
+                    quantity = item.get("quantity")
+                    notes = item.get("notes", "")  # Default ke string kosong jika tidak ada notes
+
+                    # Validasi apakah raw_material_id dan quantity ada
+                    if raw_material_id is None or quantity is None:
+                        return jsonify({"msg": PurchaseRequestMessages.MISSING_DATA}), 400
+
                     # Cek jika ada purchase request dengan kombinasi pr_code dan raw_material_id yang sama
                     existing_purchase_request = (
                         session.query(PurchaseRequest)
@@ -203,7 +208,8 @@ class PurchaseRequestServices:
                         user_id=payload["user_id"],
                         division=payload["division"],
                         raw_material_id=raw_material_id,
-                        quantity=quantity
+                        quantity=quantity,
+                        notes=notes  # Tambahkan notes ke database
                     )
                     session.add(purchase_request)
                     purchase_requests.append(purchase_request)
@@ -231,6 +237,7 @@ class PurchaseRequestServices:
                     grouped_purchase_request["requested_raw_materials"].append({
                         "raw_material_id": purchase_request.raw_materials.id,
                         "quantity": purchase_request.quantity,
+                        "notes": purchase_request.notes,  # Sertakan notes dalam respons
                         "details": raw_material_data
                     })
 
@@ -243,6 +250,7 @@ class PurchaseRequestServices:
                 "message": PurchaseRequestMessages.SUCCESS_CREATE_PURCHASE_REQUEST,
                 "purchase_request": grouped_purchase_request
             }), 200
+
 
             
     @staticmethod
@@ -381,5 +389,3 @@ class PurchaseRequestServices:
                 "message": PurchaseRequestMessages.SUCCESS_CHANGE_PURCHASE_REQUEST_STATUS
                 }), 200
         
-    
-    
