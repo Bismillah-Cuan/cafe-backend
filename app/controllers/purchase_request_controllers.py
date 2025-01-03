@@ -32,14 +32,14 @@ class PurchaseRequestControllers:
             
         return response
     
-    @staticmethod
-    @division_required("super_admin", "admin")
-    def change_status(payload):
-        _ = payload
-        data = request.json
+    # @staticmethod
+    # @division_required("super_admin", "admin")
+    # def change_status(payload):
+    #     _ = payload
+    #     data = request.json
         
-        response = PurchaseRequestServices.change_status(data)
+    #     response = PurchaseRequestServices.change_status(data)
         
-        return response
+    #     return response
             
             
