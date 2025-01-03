@@ -290,29 +290,39 @@ class PurchaseRequestServices:
                 if not purchase_requests:
                     return jsonify({"message": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
 
-                # Pisahkan raw_material_id dan quantity menjadi daftar
-                raw_material_ids = list(map(str.strip, str(data["raw_material_id"]).split(',')))
-                quantities = list(map(str.strip, str(data["quantity"]).split(',')))
+                # Validasi apakah requested_raw_materials tersedia
+                if "requested_raw_materials" not in data or not isinstance(data["requested_raw_materials"], list):
+                    return jsonify({"message": PurchaseRequestMessages.INVALID_DATA_FORMAT}), 400
 
-                # Validasi panjang raw_material_id dan quantity
-                if len(raw_material_ids) != len(quantities):
-                    return jsonify({"message": PurchaseRequestMessages.RAW_MATERIAL_QUANTITY_MISMATCH}), 400
+                # Buat daftar raw_material_id yang di-update
+                updated_raw_material_ids = [item["raw_material_id"] for item in data["requested_raw_materials"]]
 
                 # Hapus entri lama yang tidak ada di raw_material_id baru
                 for pr in purchase_requests:
-                    if str(pr.raw_material_id) not in raw_material_ids:
+                    if pr.raw_material_id not in updated_raw_material_ids:
                         session.delete(pr)
 
                 # Update atau tambahkan entri baru
-                for raw_material_id, quantity in zip(raw_material_ids, quantities):
+                for item in data["requested_raw_materials"]:
+                    raw_material_id = item.get("raw_material_id")
+                    quantity = item.get("quantity")
+                    notes = item.get("notes", "")  # Default ke string kosong jika notes tidak diberikan
+
+                    # Validasi apakah raw_material_id dan quantity ada
+                    if raw_material_id is None or quantity is None:
+                        return jsonify({"message": PurchaseRequestMessages.MISSING_DATA}), 400
+
+                    # Cek apakah entri sudah ada
                     pr = session.query(PurchaseRequest).filter_by(
                         pr_code=data["pr_code"], raw_material_id=raw_material_id
                     ).first()
+
                     if pr:
                         # Jika entri ada, perbarui field-nya
                         pr.user_id = payload["user_id"]
                         pr.division = payload["division"]
                         pr.quantity = quantity
+                        pr.notes = notes  # Update notes
                     else:
                         # Jika tidak ada, buat entri baru
                         new_pr = PurchaseRequest(
@@ -320,7 +330,8 @@ class PurchaseRequestServices:
                             raw_material_id=raw_material_id,
                             user_id=payload["user_id"],
                             division=payload["division"],
-                            quantity=quantity
+                            quantity=quantity,
+                            notes=notes
                         )
                         session.add(new_pr)
 
@@ -333,19 +344,20 @@ class PurchaseRequestServices:
                 # Format response menjadi bentuk yang diinginkan
                 grouped_purchase_request = {
                     "pr_code": data["pr_code"],
-                    "division": updated_purchase_requests[0].to_dict()["division"],
+                    "division": updated_purchase_requests[0].division,
                     "user_id": payload["user_id"],
-                    "status": updated_purchase_requests[0].to_dict()["status"],
-                    "metadata": updated_purchase_requests[0].to_dict().get("metadata", {}),
+                    "status": updated_purchase_requests[0].status,
+                    "metadata": updated_purchase_requests[0].metadata,
                     "requested_raw_materials": []
                 }
 
                 for pr in updated_purchase_requests:
-                    raw_material_details = pr.raw_materials.to_dict()
+                    raw_material_details = pr.raw_materials.to_dict()  # Asumsi raw_materials memiliki metode to_dict()
                     raw_material_details.pop('quantity', None)  # Hapus quantity dari raw_material
                     grouped_purchase_request["requested_raw_materials"].append({
                         "raw_material_id": pr.raw_material_id,
                         "quantity": pr.quantity,  # Gunakan quantity dari PurchaseRequest
+                        "notes": pr.notes,  # Sertakan notes
                         "details": raw_material_details  # Details tetap berisi data selain quantity
                     })
 
@@ -358,6 +370,7 @@ class PurchaseRequestServices:
                 "message": PurchaseRequestMessages.SUCCESS_UPDATE_PURCHASE_REQUEST,
                 "purchase_request": grouped_purchase_request
             }), 200
+
             
     @staticmethod
     def change_status(data):
