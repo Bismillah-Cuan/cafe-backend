@@ -285,120 +285,143 @@ class PurchaseRequestServices:
     def update_purchase_request(data, payload):
         with Session() as session:
             try:
-                # Ambil semua PurchaseRequest dengan pr_code tertentu
-                purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
-                if not purchase_requests:
-                    return jsonify({"message": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
+                if data["update_type"] == "status":
+                    if data["status"] not in PRStatus.get_all_pr_status():
+                        return jsonify({"msg": PurchaseRequestMessages.INVALID_PURCHASE_REQUEST_STATUS}), 400  # Cek apakah status valid
+                    
+                    # Cari semua entri dengan pr_code
+                    purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
+                    
+                    # Validasi apakah data ada
+                    if not purchase_requests:  # Cek apakah daftar kosong
+                        return jsonify({"msg": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
+                    
+                    # Ubah status
+                    for pr in purchase_requests:
+                        pr.pr_status = data["status"]
+                        
+                        # Simpan perubahan
+                        session.commit()
 
-                # Validasi apakah requested_raw_materials tersedia
-                if "requested_raw_materials" not in data or not isinstance(data["requested_raw_materials"], list):
-                    return jsonify({"message": PurchaseRequestMessages.INVALID_DATA_FORMAT}), 400
-
-                # Buat daftar raw_material_id yang di-update
-                updated_raw_material_ids = [item["raw_material_id"] for item in data["requested_raw_materials"]]
-
-                # Hapus entri lama yang tidak ada di raw_material_id baru
-                for pr in purchase_requests:
-                    if pr.raw_material_id not in updated_raw_material_ids:
-                        session.delete(pr)
-
-                # Update atau tambahkan entri baru
-                for item in data["requested_raw_materials"]:
-                    raw_material_id = item.get("raw_material_id")
-                    quantity = item.get("quantity")
-                    notes = item.get("notes", "")  # Default ke string kosong jika notes tidak diberikan
-
-                    # Validasi apakah raw_material_id dan quantity ada
-                    if raw_material_id is None or quantity is None:
-                        return jsonify({"message": PurchaseRequestMessages.MISSING_DATA}), 400
-
-                    # Cek apakah entri sudah ada
-                    pr = session.query(PurchaseRequest).filter_by(
-                        pr_code=data["pr_code"], raw_material_id=raw_material_id
-                    ).first()
-
-                    if pr:
-                        # Jika entri ada, perbarui field-nya
-                        pr.user_id = payload["user_id"]
-                        pr.division = payload["division"]
-                        pr.quantity = quantity
-                        pr.notes = notes  # Update notes
-                    else:
-                        # Jika tidak ada, buat entri baru
-                        new_pr = PurchaseRequest(
-                            pr_code=data["pr_code"],
-                            raw_material_id=raw_material_id,
-                            user_id=payload["user_id"],
-                            division=payload["division"],
-                            quantity=quantity,
-                            notes=notes
-                        )
-                        session.add(new_pr)
-
-                # Commit semua perubahan
-                session.commit()
-
-                # Ambil semua PurchaseRequest terbaru untuk pr_code
-                updated_purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
-
-                # Format response menjadi bentuk yang diinginkan
-                grouped_purchase_request = {
-                    "pr_code": data["pr_code"],
-                    "division": updated_purchase_requests[0].division,
-                    "user_id": payload["user_id"],
-                    "status": updated_purchase_requests[0].status,
-                    "metadata": updated_purchase_requests[0].metadata,
-                    "requested_raw_materials": []
-                }
-
-                for pr in updated_purchase_requests:
-                    raw_material_details = pr.raw_materials.to_dict()  # Asumsi raw_materials memiliki metode to_dict()
-                    raw_material_details.pop('quantity', None)  # Hapus quantity dari raw_material
-                    grouped_purchase_request["requested_raw_materials"].append({
-                        "raw_material_id": pr.raw_material_id,
-                        "quantity": pr.quantity,  # Gunakan quantity dari PurchaseRequest
-                        "notes": pr.notes,  # Sertakan notes
-                        "details": raw_material_details  # Details tetap berisi data selain quantity
+                    return jsonify({
+                        "message": PurchaseRequestMessages.SUCCESS_CHANGE_PURCHASE_REQUEST_STATUS
                     })
+                    
+                elif data["update_type"] == "raw_materials":
+                    # Ambil semua PurchaseRequest dengan pr_code tertentu
+                    purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
+                    if not purchase_requests:
+                        return jsonify({"message": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
+
+                    # Validasi apakah requested_raw_materials tersedia
+                    if "requested_raw_materials" not in data or not isinstance(data["requested_raw_materials"], list):
+                        return jsonify({"message": PurchaseRequestMessages.INVALID_DATA_FORMAT}), 400
+
+                    # Buat daftar raw_material_id yang di-update
+                    updated_raw_material_ids = [item["raw_material_id"] for item in data["requested_raw_materials"]]
+
+                    # Hapus entri lama yang tidak ada di raw_material_id baru
+                    for pr in purchase_requests:
+                        if pr.raw_material_id not in updated_raw_material_ids:
+                            session.delete(pr)
+
+                    # Update atau tambahkan entri baru
+                    for item in data["requested_raw_materials"]:
+                        raw_material_id = item.get("raw_material_id")
+                        quantity = item.get("quantity")
+                        notes = item.get("notes", "")  # Default ke string kosong jika notes tidak diberikan
+
+                        # Validasi apakah raw_material_id dan quantity ada
+                        if raw_material_id is None or quantity is None:
+                            return jsonify({"message": PurchaseRequestMessages.MISSING_DATA}), 400
+
+                        # Cek apakah entri sudah ada
+                        pr = session.query(PurchaseRequest).filter_by(
+                            pr_code=data["pr_code"], raw_material_id=raw_material_id
+                        ).first()
+
+                        if pr:
+                            # Jika entri ada, perbarui field-nya
+                            pr.user_id = payload["user_id"]
+                            pr.division = payload["division"]
+                            pr.quantity = quantity
+                            pr.notes = notes  # Update notes
+                        else:
+                            # Jika tidak ada, buat entri baru
+                            new_pr = PurchaseRequest(
+                                pr_code=data["pr_code"],
+                                raw_material_id=raw_material_id,
+                                user_id=payload["user_id"],
+                                division=payload["division"],
+                                quantity=quantity,
+                                notes=notes
+                            )
+                            session.add(new_pr)
+
+                    # Commit semua perubahan
+                    session.commit()
+
+                    # Ambil semua PurchaseRequest terbaru untuk pr_code
+                    updated_purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
+
+                    # Format response menjadi bentuk yang diinginkan
+                    grouped_purchase_request = {
+                        "pr_code": data["pr_code"],
+                        "division": updated_purchase_requests[0].division,
+                        "user_id": payload["user_id"],
+                        "status": updated_purchase_requests[0].status,
+                        "metadata": updated_purchase_requests[0].metadata,
+                        "requested_raw_materials": []
+                    }
+
+                    for pr in updated_purchase_requests:
+                        raw_material_details = pr.raw_materials.to_dict()  # Asumsi raw_materials memiliki metode to_dict()
+                        raw_material_details.pop('quantity', None)  # Hapus quantity dari raw_material
+                        grouped_purchase_request["requested_raw_materials"].append({
+                            "raw_material_id": pr.raw_material_id,
+                            "quantity": pr.quantity,  # Gunakan quantity dari PurchaseRequest
+                            "notes": pr.notes,  # Sertakan notes
+                            "details": raw_material_details  # Details tetap berisi data selain quantity
+                        })
+                        
+                    # Respon sukses
+                    return jsonify({
+                        "message": PurchaseRequestMessages.SUCCESS_UPDATE_PURCHASE_REQUEST,
+                        "purchase_request": grouped_purchase_request
+                    }), 200
 
             except Exception as e:
                 session.rollback()
                 return jsonify({"error": str(e)}), 400
 
-            # Respon sukses
-            return jsonify({
-                "message": PurchaseRequestMessages.SUCCESS_UPDATE_PURCHASE_REQUEST,
-                "purchase_request": grouped_purchase_request
-            }), 200
-
             
-    @staticmethod
-    def change_status(data):
-        with Session() as session:
-            try:
+    # @staticmethod
+    # def change_status(data):
+    #     with Session() as session:
+    #         try:
                 
-                if data["status"] not in PRStatus.get_all_pr_status():
-                    return jsonify({"msg": PurchaseRequestMessages.INVALID_PURCHASE_REQUEST_STATUS}), 400  # Cek apakah status valid
+    #             if data["status"] not in PRStatus.get_all_pr_status():
+    #                 return jsonify({"msg": PurchaseRequestMessages.INVALID_PURCHASE_REQUEST_STATUS}), 400  # Cek apakah status valid
                 
-                # Cari semua entri dengan pr_code
-                purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
+    #             # Cari semua entri dengan pr_code
+    #             purchase_requests = session.query(PurchaseRequest).filter_by(pr_code=data["pr_code"]).all()
                 
-                # Validasi apakah data ada
-                if not purchase_requests:  # Cek apakah daftar kosong
-                    return jsonify({"msg": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
+    #             # Validasi apakah data ada
+    #             if not purchase_requests:  # Cek apakah daftar kosong
+    #                 return jsonify({"msg": PurchaseRequestMessages.PURCHASE_REQUEST_NOT_FOUND}), 400
                 
-                # Ubah status
-                for pr in purchase_requests:
-                    pr.pr_status = data["status"]
+    #             # Ubah status
+    #             for pr in purchase_requests:
+    #                 pr.pr_status = data["status"]
                     
-                    # Simpan perubahan
-                    session.commit()
+    #                 # Simpan perubahan
+    #                 session.commit()
 
-            except Exception as e:
-                session.rollback()
-                return jsonify(Error.messages(e)), 400
+    #         except Exception as e:
+    #             session.rollback()
+    #             return jsonify(Error.messages(e)), 400
 
-            return jsonify({
-                "message": PurchaseRequestMessages.SUCCESS_CHANGE_PURCHASE_REQUEST_STATUS
-                }), 200
+    #         return jsonify({
+    #             "message": PurchaseRequestMessages.SUCCESS_CHANGE_PURCHASE_REQUEST_STATUS
+    #             }), 200
         
