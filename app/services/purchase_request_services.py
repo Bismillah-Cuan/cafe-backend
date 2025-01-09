@@ -369,8 +369,12 @@ class PurchaseRequestServices:
                         "pr_code": data["pr_code"],
                         "division": updated_purchase_requests[0].division,
                         "user_id": payload["user_id"],
-                        "status": updated_purchase_requests[0].status,
-                        "metadata": updated_purchase_requests[0].metadata,
+                        "status": updated_purchase_requests[0].pr_status,
+                        "metadata": {
+                            "updated_at": updated_purchase_requests[0].updated_at,
+                            "created_at": updated_purchase_requests[0].created_at,
+                            "is_deleted": updated_purchase_requests[0].is_deleted
+                        },
                         "requested_raw_materials": []
                     }
 

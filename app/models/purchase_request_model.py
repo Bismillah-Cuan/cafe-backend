@@ -26,6 +26,9 @@ class PurchaseRequest(Base):
     # Relationship from User
     users = relationship("Users", foreign_keys=[user_id], back_populates="purchase_request")
     
+    # Relationship to PurchaseOrder
+    purchase_order = relationship("PurchaseOrder", back_populates="purchase_request")
+    
     def to_dict(self):
         return {
             "id": self.id,

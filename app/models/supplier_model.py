@@ -15,7 +15,7 @@ class Supplier(Base):
     is_deleted = Column(Boolean, default=False, nullable=False)
     
     # Relationship to PurchaseOrder
-    # purchase_order = relationship("PurchaseOrder", back_populates="supplier")
+    purchase_order = relationship("PurchaseOrder", back_populates="supplier")
     
     def to_dict(self):
         return {
