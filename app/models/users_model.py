@@ -17,7 +17,7 @@ class Users(Base):
     is_deleted = Column(Boolean, default=False, nullable=False)
     
     # # relationship to purchase_order
-    # purchase_order = relationship("PurchaseOrder", back_populates="users")
+    purchase_order = relationship("PurchaseOrder", back_populates="users")
     
     # # relationship to purchase_request
     purchase_request = relationship("PurchaseRequest", back_populates="users")
