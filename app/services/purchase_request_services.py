@@ -34,7 +34,6 @@ class PurchaseRequestServices:
                             "division": pr_data["division"],
                             "user_id": pr_data["user_id"],
                             "status": pr_data["status"],
-                            "notes": pr_data["notes"],
                             "metadata": pr_data.get("metadata", {}),
                             "requested_raw_materials": []  # Kosongkan requested_raw_materials awalnya
                         })
@@ -49,6 +48,7 @@ class PurchaseRequestServices:
                         grouped_purchase_requests[pr_data["pr_code"]]["requested_raw_materials"].append({
                             "raw_material_id": purchase_request.raw_materials.id,
                             "quantity": purchase_request.quantity,  # Ambil quantity dari PurchaseRequest
+                            "notes": purchase_request.notes,
                             "details": raw_material_data  # Details berisi raw_material fields kecuali quantity
                         })
 
