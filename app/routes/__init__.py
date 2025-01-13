@@ -4,6 +4,7 @@ from app.controllers.users_controllers import UsersController
 from app.controllers.raw_material_controllers import RawMaterialControllers
 from app.controllers.supplier_controllers import SupplierControllers
 from app.controllers.purchase_request_controllers import PurchaseRequestControllers
+from app.controllers.purchase_order_controllers import PurchaseOrderControllers
 from app.controllers.seed_controllers import seeds_controller
 
 users = Blueprint("users", __name__)
@@ -23,6 +24,9 @@ suppliers.add_url_rule("/", view_func=SupplierControllers.supplier_controllers, 
 
 purchase_request = Blueprint("purchase-request", __name__)
 purchase_request.add_url_rule("/", view_func=PurchaseRequestControllers.purchase_request_controllers, methods=["GET", "POST", "DELETE", "PUT"])
+
+purchase_order = Blueprint("purchase-order", __name__)
+purchase_order.add_url_rule("/", view_func=PurchaseOrderControllers.purchase_order_controllers, methods=["GET", "POST", "DELETE", "PUT"])
 
 seeds = Blueprint("seeds", __name__)
 seeds.add_url_rule("/", view_func=seeds_controller, methods=["GET", "POST", "DELETE"])

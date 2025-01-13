@@ -33,11 +33,13 @@ def create_app(test_config=None, production_config=os.getenv("PRODUCTION_CONFIG"
         if request.method == 'OPTIONS':
             return '', 204
     
-    from app.routes import users, raw_materials, suppliers, purchase_request, seeds
+    from app.routes import users, raw_materials, suppliers, purchase_request, purchase_order, seeds
+    
     app.register_blueprint(users, url_prefix="/api/v1/users")
     app.register_blueprint(raw_materials, url_prefix="/api/v1/raw-materials")
     app.register_blueprint(suppliers, url_prefix="/api/v1/suppliers")
     app.register_blueprint(purchase_request, url_prefix="/api/v1/purchase-request")
+    app.register_blueprint(purchase_order, url_prefix="/api/v1/purchase-order")
     app.register_blueprint(seeds, url_prefix="/api/v1/seeds")
     
     return app

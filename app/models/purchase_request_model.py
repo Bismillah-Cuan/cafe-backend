@@ -15,7 +15,7 @@ class PurchaseRequest(Base):
     raw_material_id = Column(Integer, ForeignKey("raw_materials.id"), nullable=False, unique=False)
     quantity = Column(Float, nullable=False)
     pr_status = Column(Enum(PRStatus), nullable=False, default=PRStatus.REQUESTED)
-    notes = Column(String(255), nullable=True)
+    notes = Column(String(255), nullable=False, default=None)
     updated_at = Column(DateTime, default=None, onupdate=datetime.now(timezone.utc), nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)

@@ -9,11 +9,16 @@ class PurchaseOrder(Base):
     __tablename__ = "purchase_order"
     
     id = Column(Integer, primary_key=True, nullable=False)
-    supplier_id = Column(Integer, ForeignKey("supplier.id"), nullable=False)
-    purchase_request_id = Column(Integer, ForeignKey("purchase_request.id"), nullable=False, unique=True)
+    po_code = Column(String(255), nullable=False)
+    supplier_id = Column(Integer, ForeignKey("supplier.id"), nullable=True)
+    purchase_request_id = Column(Integer, ForeignKey("purchase_request.id"), nullable=False)
+    raw_material_id = Column(Integer, ForeignKey("raw_materials.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     division = Column(Enum(DivisionEnums), nullable=False)
-    po_status = Column(Enum(POStatus), nullable=False)
+    received_qty = Column(Float, nullable=False, default=0)
+    received_notes = Column(String(255), nullable=True)
+    supplier_notes = Column(String(255), nullable=True)
+    po_status = Column(Enum(POStatus), nullable=False, default=POStatus.ON_PROCESS)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=None, onupdate=datetime.now(timezone.utc), nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -27,13 +32,20 @@ class PurchaseOrder(Base):
     # Relationship from User
     users = relationship("Users", foreign_keys=[user_id], back_populates="purchase_order")
     
+    # Relationship from RawMaterials
+    raw_materials = relationship("RawMaterials", foreign_keys=[raw_material_id], back_populates="purchase_order")
+    
     def to_dict(self):
         return {
             "id": self.id,
+            "po_code": self.po_code,
             "supplier_id": self.supplier_id,
             "purchase_request_id": self.purchase_request_id,
             "user_id": self.user_id,
             "division": self.division,
+            "received_qty": self.received_qty,
+            "received_notes": self.received_notes,
+            "supplier_notes": self.supplier_notes,
             "status": self.po_status,
             "metadata": {
                 "created_at": self.created_at,
