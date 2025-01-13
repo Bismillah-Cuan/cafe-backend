@@ -26,7 +26,7 @@ class RawMaterials(Base):
     # menu_ingredient = relationship("MenuIngredients", back_populates="raw_materials")
     
     # # relationship to PO
-    # purchase_order = relationship("PurchaseOrder", back_populates="raw_materials")
+    purchase_order = relationship("PurchaseOrder", back_populates="raw_materials")
     
     # # relationship to PR
     purchase_request = relationship("PurchaseRequest", back_populates="raw_materials")
