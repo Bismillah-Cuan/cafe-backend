@@ -1,10 +1,13 @@
 from flask import Flask, redirect, request
 from app.config import DevelopmentConfig, ProductionConfig
 from flask_jwt_extended import JWTManager
+from dotenv import load_dotenv
 import os
 from flask_cors import CORS
 
 jwt = JWTManager()
+
+load_dotenv()
 
 def create_app(test_config=None, production_config=os.getenv("PRODUCTION_CONFIG")):
     app = Flask(__name__)
@@ -25,7 +28,13 @@ def create_app(test_config=None, production_config=os.getenv("PRODUCTION_CONFIG"
     def index():
         return redirect("https://documenter.getpostman.com/view/31842216/2sAYBRGa1z")
     
+    @app.before_request
+    def handle_options():
+        if request.method == 'OPTIONS':
+            return '', 204
+    
     from app.routes import users, raw_materials, suppliers, purchase_request, purchase_order, seeds
+    
     app.register_blueprint(users, url_prefix="/api/v1/users")
     app.register_blueprint(raw_materials, url_prefix="/api/v1/raw-materials")
     app.register_blueprint(suppliers, url_prefix="/api/v1/suppliers")

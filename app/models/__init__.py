@@ -10,4 +10,4 @@ from app.models.purchase_order_model import PurchaseOrder
 # Membuat semua tabel yang belum ada berdasarkan model
 Base.metadata.create_all(engine)
 
-print("All tables created")
+print("Success update database")

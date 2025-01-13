@@ -12,7 +12,7 @@ class PurchaseRequest(Base):
     pr_code = Column(String(255), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     division = Column(Enum(DivisionEnums), nullable=False)
-    raw_material_id = Column(Integer, ForeignKey("raw_materials.id"), nullable=False)
+    raw_material_id = Column(Integer, ForeignKey("raw_materials.id"), nullable=False, unique=False)
     quantity = Column(Float, nullable=False)
     pr_status = Column(Enum(PRStatus), nullable=False, default=PRStatus.REQUESTED)
     notes = Column(String(255), nullable=False, default=None)
