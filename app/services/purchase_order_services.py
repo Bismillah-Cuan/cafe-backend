@@ -4,8 +4,10 @@ from datetime import datetime
 from collections import defaultdict
 from app.models.purchase_order_model import PurchaseOrder
 from app.models.purchase_request_model import PurchaseRequest
+from app.models.supplier_model import Supplier
 from app.constant.messages.error import Error
 from app.constant.messages.purchase_order import PurchaseOrderMessages
+from app.constant.messages.supplier import SupplierMessages
 from app.constant.enums.po_status import POStatus
 
 class PurchaseOrderServices:
@@ -170,13 +172,17 @@ class PurchaseOrderServices:
                     }), 200
                     
                 elif data["update_type"] == "supplier":
-                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"]).all()
+                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], raw_material_id=data["raw_material_id"]).first()
                     
                     if not po:
                         return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404
+                    else:
+                        supplier = session.query(Supplier).filter_by(id=data["supplier_id"]).first()
+                        if supplier is None:
+                            return jsonify({"msg": SupplierMessages.SUPPLIER_NOT_FOUND}), 404
                     
-                    for po in po:
-                        po.supplier_id = data["supplier_id"]
+                    
+                    po.supplier_id = data["supplier_id"]
                     
                     session.commit()
                     
@@ -185,7 +191,7 @@ class PurchaseOrderServices:
                     }), 200
                 
                 elif data["update_type"] == "supplier_notes":
-                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"]).all()
+                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], supplier_id=data["supplier_id"]).all()
                     
                     if not po:
                         return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404
@@ -200,14 +206,14 @@ class PurchaseOrderServices:
                     }), 200
                     
                 elif data["update_type"] == "received_data":
-                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"]).all()
+                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], raw_material_id=data["raw_material_id"]).first()
                     
                     if not po:
                         return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404
                     
-                    for po in po:
-                        po.received_qty = data["received_qty"]
-                        po.received_notes = data["received_notes"]
+                    
+                    po.received_qty = data["received_qty"]
+                    po.received_notes = data["received_notes"]
                     
                     session.commit()
                     
