@@ -177,12 +177,12 @@ class PurchaseOrderServices:
                     if not po:
                         return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404
                     else:
-                        supplier = session.query(Supplier).filter_by(id=data["supplier_id"]).first()
+                        supplier = session.query(Supplier).filter_by(name=data["supplier_name"]).first()
                         if supplier is None:
                             return jsonify({"msg": SupplierMessages.SUPPLIER_NOT_FOUND}), 404
                     
                     
-                    po.supplier_id = data["supplier_id"]
+                    po.supplier_id = supplier.id
                     
                     session.commit()
                     
@@ -191,7 +191,8 @@ class PurchaseOrderServices:
                     }), 200
                 
                 elif data["update_type"] == "supplier_notes":
-                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], supplier_id=data["supplier_id"]).all()
+                    supplier = session.query(Supplier).filter_by(name=data["supplier_name"]).first()
+                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], supplier_id=supplier.id).all()
                     
                     if not po:
                         return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404

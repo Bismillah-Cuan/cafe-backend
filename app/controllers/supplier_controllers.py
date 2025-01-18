@@ -28,3 +28,13 @@ class SupplierControllers:
                 return jsonify(AuthMessages.USER_NOT_AUTHORIZED), 403
         
         return response
+    
+    @staticmethod
+    @division_required("super_admin", "admin", "kitchen", "bar", "sosmed", "finance")
+    def search_supplier(payload):
+        _ = payload
+        data = request.json
+        
+        response = SupplierServices.get_suppliers_by_word(data["word"])
+        
+        return response
