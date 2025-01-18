@@ -21,6 +21,7 @@ raw_materials.add_url_rule("/search", view_func=RawMaterialControllers.search_ra
 
 suppliers = Blueprint("suppliers", __name__)
 suppliers.add_url_rule("/", view_func=SupplierControllers.supplier_controllers, methods=["GET", "POST", "DELETE", "PUT"])
+suppliers.add_url_rule("/search", view_func=SupplierControllers.search_supplier, methods=["POST"])
 
 purchase_request = Blueprint("purchase-request", __name__)
 purchase_request.add_url_rule("/", view_func=PurchaseRequestControllers.purchase_request_controllers, methods=["GET", "POST", "DELETE", "PUT"])

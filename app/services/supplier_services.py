@@ -19,6 +19,21 @@ class SupplierServices:
                 })
             except Exception as e:
                 return jsonify(Error.messages(e))
+            
+    @staticmethod
+    def get_suppliers_by_word(word):
+        with Session() as session:
+            try:
+                suppliers: Supplier = session.query(Supplier).filter(Supplier.name.contains(word), Supplier.is_deleted == False).all()
+                
+                list_suppliers = [supplier.to_dict() for supplier in suppliers]
+                
+                return jsonify({
+                    "message": SupplierMessages.SUCCESS_SHOW_ALL_SUPPLIER,
+                    "suppliers": list_suppliers
+                })
+            except Exception as e:
+                return jsonify(Error.messages(e))
     
     @staticmethod
     def create_supplier(data):
