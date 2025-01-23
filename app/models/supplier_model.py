@@ -9,7 +9,7 @@ class Supplier(Base):
     
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(255), nullable=False)
-    type = Column(Enum(SupplierType), nullable=False)
+    type = Column(Enum(SupplierType), nullable=False, default=SupplierType.ONLINE)
     address = Column(String(255), nullable=True)
     phone_number = Column(String(255), nullable=True)
     bank_account = Column(String(255), nullable=True)
