@@ -28,6 +28,7 @@ purchase_request.add_url_rule("/", view_func=PurchaseRequestControllers.purchase
 
 purchase_order = Blueprint("purchase-order", __name__)
 purchase_order.add_url_rule("/", view_func=PurchaseOrderControllers.purchase_order_controllers, methods=["GET", "POST", "DELETE", "PUT"])
+purchase_order.add_url_rule("/generate-pdf", view_func=PurchaseOrderControllers.generate_pdf, methods=["POST"])
 
 seeds = Blueprint("seeds", __name__)
 seeds.add_url_rule("/", view_func=seeds_controller, methods=["GET", "POST", "DELETE"])

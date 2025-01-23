@@ -32,11 +32,13 @@ seed_configs = {
         "suppliers": {
             "model": Supplier,
             "data": suppliers_data,
-            "fields": ["name", "address", "phone_number"],
+            "fields": ["name", "type", "address", "phone_number", "bank_account"],
             "process_function": lambda session, supplier_data: Supplier(
                 name=supplier_data["name"],
+                type=supplier_data["type"],
                 address=supplier_data["address"],
-                phone_number=supplier_data["phone_number"]
+                phone_number=supplier_data["phone_number"],
+                bank_account=supplier_data["bank_account"]
             )
         },
         "purchase_requests": {

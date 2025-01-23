@@ -1,15 +1,18 @@
 from app.connections.db import Base
-from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, ForeignKey, Boolean, Float
+from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, ForeignKey, Boolean, Float, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
+from app.constant.enums.supplier import SupplierType  
 
 class Supplier(Base):
     __tablename__ = "supplier"
     
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(255), nullable=False)
+    type = Column(Enum(SupplierType), nullable=False)
     address = Column(String(255), nullable=True)
     phone_number = Column(String(255), nullable=True)
+    bank_account = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=None, onupdate=datetime.now(timezone.utc), nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -21,8 +24,10 @@ class Supplier(Base):
         return {
             "id": self.id,
             "name": self.name,
+            "type": self.type,
             "address": self.address,
             "phone_number": self.phone_number,
+            "bank_account": self.bank_account,
             "metadata": {
                 "created_at": self.created_at,
                 "updated_at": self.updated_at,

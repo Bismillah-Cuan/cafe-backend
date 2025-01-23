@@ -18,7 +18,7 @@ class PurchaseOrder(Base):
     received_qty = Column(Float, nullable=False, default=0)
     received_notes = Column(String(255), nullable=True)
     supplier_notes = Column(String(255), nullable=True)
-    po_status = Column(Enum(POStatus), nullable=False, default=POStatus.ON_PROCESS)
+    po_status = Column(Enum(POStatus), nullable=False, default=POStatus.NEW)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=None, onupdate=datetime.now(timezone.utc), nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False)

@@ -1,7 +1,10 @@
+import os
 from app.connections.db import Session
 from flask import jsonify
 from datetime import datetime
 from collections import defaultdict
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML
 from app.models.purchase_order_model import PurchaseOrder
 from app.models.purchase_request_model import PurchaseRequest
 from app.models.supplier_model import Supplier
@@ -172,18 +175,24 @@ class PurchaseOrderServices:
                     }), 200
                     
                 elif data["update_type"] == "supplier":
-                    po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], raw_material_id=data["raw_material_id"]).first()
+                    # Pastikan raw_material_id adalah daftar
+                    if not isinstance(data["raw_material_id"], list):
+                        return jsonify({"msg": PurchaseOrderMessages.INVALID_RAW_MATERIAL_ID_FORMAT}), 400
                     
-                    if not po:
-                        return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404
-                    else:
-                        supplier = session.query(Supplier).filter_by(name=data["supplier_name"]).first()
-                        if supplier is None:
-                            return jsonify({"msg": SupplierMessages.SUPPLIER_NOT_FOUND}), 404
+                    # Query supplier berdasarkan nama
+                    supplier = session.query(Supplier).filter_by(name=data["supplier_name"]).first()
+                    if supplier is None:
+                        return jsonify({"msg": SupplierMessages.SUPPLIER_NOT_FOUND}), 404
                     
-                    
-                    po.supplier_id = supplier.id
-                    
+                    for raw_material_id in data["raw_material_id"]:
+                        po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], raw_material_id=raw_material_id).first()
+                        
+                        if not po:
+                            return jsonify({"msg": f"{PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND_FOR_RAW_MATERIAL_ID} : {raw_material_id}"}), 404
+                        
+                        
+                        po.supplier_id = supplier.id
+                        
                     session.commit()
                     
                     return jsonify({
@@ -227,6 +236,74 @@ class PurchaseOrderServices:
             except Exception as e:
                 session.rollback()
                 return jsonify(Error.messages(e)), 400
+            
+    @staticmethod
+    def generate_receiving_form_pdf(data):
+        with Session() as session:
+            try:
+                po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"]).all()
+                if not po:
+                    return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404
+                
+                data_pdf = {
+                    "no_po": po[0].po_code,
+                    "nama_supplier": po[0].supplier.name if po and po[0].supplier and po[0].supplier.name else "",
+                    "rows": []
+                }
+                
+                for po in po:
+                    row = {
+                        "material_name": po.raw_materials.name,
+                        "requested_quantity": po.purchase_request.quantity,
+                        "received_quantity": "",
+                        "unit": po.raw_materials.purchase_unit,
+                        "notes": "",
+                        "condition": "Baik / Rusak"
+                    }
+                    
+                    data_pdf["rows"].append(row)
+                    
+                # Path ke folder tempat template HTML berada
+                current_directory = os.getcwd()
+                
+                html_template_folder = os.path.abspath(os.path.join(current_directory, "app/constant/html_template"))
+                
+                html_folder = os.path.abspath(os.path.join(current_directory, "app/constant/html_output"))
+                if not os.path.exists(html_folder):
+                    os.makedirs(html_folder, exist_ok=True)
+                    
+                pdf_folder = os.path.abspath(os.path.join(current_directory, "app/constant/pdf_output"))
+                if not os.path.exists(pdf_folder):
+                    os.makedirs(pdf_folder, exist_ok=True)
+                    
+                if not os.path.isfile(os.path.join(html_folder, 'receiving_form_template.html')):
+                    raise FileNotFoundError(f"File not found: {os.path.join(html_folder, 'receiving_form_template.html')}")
+
+                file_loader = FileSystemLoader(html_template_folder)
+                env = Environment(loader=file_loader)
+                
+                # Load template HTML
+                template = env.get_template('receiving_form_template.html')
+
+                # Render template dengan data
+                output = template.render(data_pdf)
+                    
+                # Simpan hasil ke file HTML baru
+                with open(os.path.join(html_folder, f"receiving_form_{data['po_code']}.html"), "w") as f:
+                    f.write(output)
+                
+                # Konversi HTML ke PDF
+                HTML(os.path.join(html_folder, f"receiving_form_{data['po_code']}.html")).write_pdf(os.path.join(pdf_folder, f"receiving_form_{data['po_code']}.pdf"))
+
+                return jsonify({
+                    "msg": PurchaseOrderMessages.SUCCESS_CREATE_RECEIVING_FORM
+                }), 200
+                
+            except Exception as e:
+                session.rollback()
+                return jsonify(Error.messages(e)), 400
+                
+                
                     
                     
                     

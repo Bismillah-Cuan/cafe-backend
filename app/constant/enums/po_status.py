@@ -1,6 +1,7 @@
 from enum import Enum
 
 class POStatus(str, Enum):
+    NEW = "new"
     ON_PROCESS = "on_process"
     PURCHASED = "purchased"
     RECEIVED = "received"
