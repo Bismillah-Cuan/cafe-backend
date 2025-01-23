@@ -27,3 +27,12 @@ class PurchaseOrderControllers:
                 return jsonify(AuthMessages.USER_NOT_AUTHORIZED), 403
 
         return response
+    
+    @staticmethod
+    @division_required("super_admin", "admin")
+    def generate_pdf(payload):
+        
+        data = request.json
+        response = PurchaseOrderServices.generate_receiving_form_pdf(data)
+        
+        return response

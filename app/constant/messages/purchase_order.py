@@ -13,3 +13,6 @@ class PurchaseOrderMessages:
     INVALID_UPDATE_TYPE = "invalid update type"
     SUCCESS_CHANGE_SUPPLIER_NOTES = "success change supplier notes"
     SUCCESS_CHANGE_RECEIVED_DATA = "success change received data"
+    SUCCESS_CREATE_RECEIVING_FORM = "success create receiving form"
+    INVALID_RAW_MATERIAL_ID_FORMAT = "Invalid data format for raw_material_id. It should be a list."
+    PURCHASE_ORDER_NOT_FOUND_FOR_RAW_MATERIAL_ID = "purchase order not found for raw_material_id"
