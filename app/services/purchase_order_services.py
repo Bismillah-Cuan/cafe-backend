@@ -175,26 +175,33 @@ class PurchaseOrderServices:
                     }), 200
                     
                 elif data["update_type"] == "supplier":
-                    # Pastikan raw_material_id adalah daftar
-                    if not isinstance(data["raw_material_id"], list):
-                        return jsonify({"msg": PurchaseOrderMessages.INVALID_RAW_MATERIAL_ID_FORMAT}), 400
-                    
-                    # Query supplier berdasarkan nama
-                    supplier = session.query(Supplier).filter_by(name=data["supplier_name"]).first()
-                    if supplier is None:
-                        return jsonify({"msg": SupplierMessages.SUPPLIER_NOT_FOUND}), 404
-                    
-                    for raw_material_id in data["raw_material_id"]:
+                    # Pastikan raw_request_name adalah daftar
+                    if not isinstance(data.get("update_supplier"), list):
+                        return jsonify({"msg": PurchaseOrderMessages.INVALID_UPDATE_SUPPLIER_FORMAT}), 400
+
+                    for request in data["update_supplier"]:
+                        raw_material_id = request.get("raw_material_id")
+                        supplier_name = request.get("supplier_name")
+
+                        if raw_material_id is None or not supplier_name:
+                            return jsonify({"msg": PurchaseOrderMessages.INVALID_REQUEST_DATA}), 400
+
+                        # Query supplier berdasarkan nama
+                        supplier = session.query(Supplier).filter_by(name=supplier_name).first()
+                        if supplier is None:
+                            return jsonify({"msg": f"{SupplierMessages.SUPPLIER_NOT_FOUND} : {supplier_name}"}), 404
+
+                        # Query PurchaseOrder berdasarkan po_code dan raw_material_id
                         po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"], raw_material_id=raw_material_id).first()
-                        
                         if not po:
                             return jsonify({"msg": f"{PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND_FOR_RAW_MATERIAL_ID} : {raw_material_id}"}), 404
-                        
-                        
+
+                        # Update supplier_id pada PurchaseOrder
                         po.supplier_id = supplier.id
-                        
+
+                    # Commit perubahan ke database
                     session.commit()
-                    
+
                     return jsonify({
                         "msg": PurchaseOrderMessages.SUCCESS_CHANGE_PURCHASE_ORDER_SUPPLIER
                     }), 200
