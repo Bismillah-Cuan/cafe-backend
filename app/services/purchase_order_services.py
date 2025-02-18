@@ -61,10 +61,9 @@ class PurchaseOrderServices:
         #get nya klo ada received quantity yg ditunjukin received quantity
 
     @staticmethod
-    def generate_pr_code(payload):
+    def generate_pr_code(division):
         with Session() as session:
             try:
-                division = payload["division"]
                 if division == "super_admin":
                     div_prefix = "SA"
                 elif division == "admin":
@@ -115,7 +114,7 @@ class PurchaseOrderServices:
                 if pr_entries:
                     for pr_id, rm_id in pr_entries:
                         po = PurchaseOrder(
-                            po_code=PurchaseOrderServices.generate_pr_code(payload),  # Generate kode PO
+                            po_code=PurchaseOrderServices.generate_pr_code(pr_entries[0].division),  # Generate kode PO
                             purchase_request_id=pr_id,  # Gunakan pr_id dari hasil query
                             raw_material_id=rm_id,  # Gunakan rm_id dari hasil query
                             division=payload["division"],  # Ambil dari payload
@@ -245,67 +244,47 @@ class PurchaseOrderServices:
                 return jsonify(Error.messages(e)), 400
             
     @staticmethod
-    def generate_receiving_form_pdf(data):
+    def generate_receiving_form_html(data):
         with Session() as session:
             try:
                 po = session.query(PurchaseOrder).filter_by(po_code=data["po_code"]).all()
                 if not po:
                     return jsonify({"msg": PurchaseOrderMessages.PURCHASE_ORDER_NOT_FOUND}), 404
-                
+
                 data_pdf = {
                     "no_po": po[0].po_code,
-                    "nama_supplier": po[0].supplier.name if po and po[0].supplier and po[0].supplier.name else "",
+                    "nama_supplier": po[0].supplier.name if po[0].supplier and po[0].supplier.name else "",
                     "rows": []
                 }
-                
-                for po in po:
+
+                for po_item in po:
                     row = {
-                        "material_name": po.raw_materials.name,
-                        "requested_quantity": po.purchase_request.quantity,
+                        "material_name": po_item.raw_materials.name,
+                        "requested_quantity": po_item.purchase_request.quantity,
                         "received_quantity": "",
-                        "unit": po.raw_materials.purchase_unit,
+                        "unit": po_item.raw_materials.purchase_unit,
                         "notes": "",
                         "condition": "Baik / Rusak"
                     }
-                    
                     data_pdf["rows"].append(row)
-                    
-                # Path ke folder tempat template HTML berada
-                current_directory = os.getcwd()
-                
-                html_template_folder = os.path.abspath(os.path.join(current_directory, "app/constant/html_template"))
-                
-                html_folder = os.path.abspath(os.path.join(current_directory, "app/constant/html_output"))
-                if not os.path.exists(html_folder):
-                    os.makedirs(html_folder, exist_ok=True)
-                    
-                pdf_folder = os.path.abspath(os.path.join(current_directory, "app/constant/pdf_output"))
-                if not os.path.exists(pdf_folder):
-                    os.makedirs(pdf_folder, exist_ok=True)
-                    
-                if not os.path.isfile(os.path.join(html_folder, 'receiving_form_template.html')):
-                    raise FileNotFoundError(f"File not found: {os.path.join(html_folder, 'receiving_form_template.html')}")
 
+                # Path ke template HTML
+                current_directory = os.getcwd()
+                html_template_folder = os.path.abspath(os.path.join(current_directory, "app/constant/html_template"))
+
+                # Load template HTML
                 file_loader = FileSystemLoader(html_template_folder)
                 env = Environment(loader=file_loader)
-                
-                # Load template HTML
                 template = env.get_template('receiving_form_template.html')
 
-                # Render template dengan data
-                output = template.render(data_pdf)
-                    
-                # Simpan hasil ke file HTML baru
-                with open(os.path.join(html_folder, f"receiving_form_{data['po_code']}.html"), "w") as f:
-                    f.write(output)
-                
-                # Konversi HTML ke PDF
-                HTML(os.path.join(html_folder, f"receiving_form_{data['po_code']}.html")).write_pdf(os.path.join(pdf_folder, f"receiving_form_{data['po_code']}.pdf"))
+                # Render template dengan data tanpa menyimpannya ke file
+                rendered_html = template.render(data_pdf)
 
                 return jsonify({
-                    "msg": PurchaseOrderMessages.SUCCESS_CREATE_RECEIVING_FORM
+                    "msg": PurchaseOrderMessages.SUCCESS_CREATE_RECEIVING_FORM,
+                    "html": rendered_html
                 }), 200
-                
+
             except Exception as e:
                 session.rollback()
                 return jsonify(Error.messages(e)), 400
