@@ -31,8 +31,9 @@ class PurchaseOrderControllers:
     @staticmethod
     @division_required("super_admin", "admin")
     def generate_pdf(payload):
+        _ = payload
         
         data = request.json
-        response = PurchaseOrderServices.generate_receiving_form_pdf(data)
+        response = PurchaseOrderServices.generate_receiving_form_html(data)
         
         return response

@@ -50,12 +50,12 @@ class UsersController:
         
         if "payload" in response:
             payload = response["payload"]
-            print(payload)
             access_token = create_access_token(identity=f"{payload}")
             refresh_token = create_refresh_token(identity=f"{payload}")
             
             return jsonify({
                 "msg": response["msg"],
+                "division": payload["division"],
                 "access_token": access_token,
                 "refresh_token": refresh_token
             }), 200

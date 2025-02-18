@@ -1,120 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <title>Form Penerimaan Bahan Baku</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .header-left, .header-right {
-            width: 48%;
-        }
-        .section label {
-            display: inline-block;
-            width: 150px;
-            font-weight: bold;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .signature-section {
-            margin-top: 40px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .signature-box {
-            text-align: center;
-            width: 45%;
-        }
-        .signature-line {
-            margin-top: 50px;
-            border-top: 1px solid black;
-            width: 100%;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>FORM PENERIMAAN BAHAN BAKU</h1>
-    <div class="header-section">
-        <div class="header-left">
-            <div class="section">
-                <label>Nama Penerima:</label> 
+<body class="p-6 bg-gray-100">
+    <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-xl font-bold text-center text-gray-800 mb-6">FORM PENERIMAAN BAHAN BAKU</h1>
+        
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <div>
+                <p><span class="font-semibold">Nama Penerima:</span> </p>
+                <p><span class="font-semibold">Divisi:</span> </p>
+                <p><span class="font-semibold">No. PO:</span> {{ po_code }}</p>
             </div>
-            <div class="section">
-                <label>Divisi:</label> 
-            </div>
-            <div class="section">
-                <label>No. PO:</label> {{ po_code }}
-            </div>
-        </div>
-        <div class="header-right">
-            <div class="section">
-                <label>Tgl. Penerimaan:</label>
-            </div>
-            <div class="section">
-                <label>Nama Supplier:</label> {{ supplier_name }}
+            <div>
+                <p><span class="font-semibold">Tgl. Penerimaan:</span></p>
+                <p><span class="font-semibold">Nama Supplier:</span> {{ supplier_name }}</p>
             </div>
         </div>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Nama Bahan Baku</th>
-                <th>Jumlah Seharusnya</th>
-                <th>Jumlah yang Diterima</th>
-                <th>Satuan</th>
-                <th>Kondisi</th>
-                <th style="width: 30%;">Catatan</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ row.material_name }}</td>
-                <td>{{ row.requested_qty }}</td>
-                <td>{{ row.received_qty }}</td>
-                <td>{{ row.unit }}</td>
-                <td>{{ row.condition }}</td>
-                <td>{{ row.notes }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <div class="signature-section">
-        <div class="signature-box">
-            <p>Penerima</p>
-            <div class="signature-line"></div>
-        </div>
-        <div class="signature-box">
-            <p>Supervisor</p>
-            <div class="signature-line"></div>
+        
+        <table class="w-full border border-gray-300 text-sm text-gray-700">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="border border-gray-300 px-3 py-2">No.</th>
+                    <th class="border border-gray-300 px-3 py-2">Nama Bahan Baku</th>
+                    <th class="border border-gray-300 px-3 py-2">Jumlah Seharusnya</th>
+                    <th class="border border-gray-300 px-3 py-2">Jumlah yang Diterima</th>
+                    <th class="border border-gray-300 px-3 py-2">Satuan</th>
+                    <th class="border border-gray-300 px-3 py-2">Kondisi</th>
+                    <th class="border border-gray-300 px-3 py-2 w-1/4">Catatan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr class="bg-white hover:bg-gray-100">
+                    <td class="border border-gray-300 px-3 py-2 text-center">{{ loop.index }}</td>
+                    <td class="border border-gray-300 px-3 py-2">{{ row.material_name }}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-center">{{ row.requested_qty }}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-center">{{ row.received_qty }}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-center">{{ row.unit }}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-center">{{ row.condition }}</td>
+                    <td class="border border-gray-300 px-3 py-2">{{ row.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="flex justify-between mt-8">
+            <div class="w-1/3 text-center">
+                <p class="font-semibold">Penerima</p>
+                <div class="mt-12 border-t border-gray-500"></div>
+            </div>
+            <div class="w-1/3 text-center">
+                <p class="font-semibold">Supervisor</p>
+                <div class="mt-12 border-t border-gray-500"></div>
+            </div>
         </div>
     </div>
 </body>
